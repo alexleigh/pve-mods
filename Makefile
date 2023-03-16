@@ -26,3 +26,20 @@ install:
 
 clean:
 	rm -f proxmoxlib.js Nodes.pm pvemanagerlib.js
+
+backup:
+	mkdir -p orig
+	cp -a ${WWWBASEDIR}/proxmoxlib.js orig/
+	cp -a ${PERLLIBDIR}/PVE/API2/Nodes.pm orig/
+	cp -a ${WWWJSDIR}/pvemanagerlib.js orig/
+
+restore:
+	install -d ${WWWBASEDIR}
+	install -m 0644 orig/proxmoxlib.js ${WWWBASEDIR}
+	install -d ${PERLLIBDIR}/PVE/API2
+	install -m 0644 orig/Nodes.pm ${PERLLIBDIR}/PVE/API2
+	install -d ${WWWJSDIR}
+	install -m 0644 orig/pvemanagerlib.js ${WWWJSDIR}
+
+cleanbackup:
+	rm -f orig/proxmoxlib.js orig/Nodes.pm orig/pvemanagerlib.js
