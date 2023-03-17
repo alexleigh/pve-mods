@@ -59,6 +59,14 @@ this repository is checked out. Building these files requires a development envi
 at a minimum, the Proxmox packages `pve-manager`, `proxmox-widget-toolkit`, and
 [`pve-docs`](https://github.com/proxmox/pve-docs) can be successfully built.
 
+If you're making modifications on top of official Proxmox repositories, for the purpose of installing
+the modified files on a real system, make sure to check out the revision in the Proxmox repository
+which matches the version of the Proxmox package installed on the system being modified. For example,
+if you are modifying [`pve-manager`](https://git.proxmox.com/?p=pve-manager.git;a=summary), and
+the system you are targeting is running `pve-manager` 7.3-6, make sure to check out revision
+`723bb6e` "bump version to 7.3-6" prior to making any changes. Otherwise, the modified file will contain
+changes other than the changes you intended.
+
 Once the modified files have been built, running `make install` will install the files to the
 current system, replacing PVE distributed files. Prior to running `make install`, it is a good
 idea to run `make backup` to make a copy of the PVE distributed files. Running `make restore`
