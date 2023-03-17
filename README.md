@@ -1,9 +1,20 @@
 # pve-mods
 
 Modifications to [Proxmox Virtual Environment](https://www.proxmox.com/en/proxmox-ve) in
-order to add CPU and hard drive temperature sensors (powered by
+order to add CPU and hard drive temperature readings (powered by
 [lm-sensors](https://github.com/lm-sensors/lm-sensors)) to the PVE web-based management
 interface.
+
+Temperature readings on the desktop version of the management interface:
+
+![PVE GUI desktop screenshot](https://github.com/alexleigh/pve-mods/blob/docs/desktop.png?raw=true)
+
+Temperature readings on the mobile version of the management interface:
+
+![PVE GUI mobile screenshot](https://github.com/alexleigh/pve-mods/blob/docs/mobile.png?raw=true)
+
+Since the mobile version does not auto-refresh statuses, another enhancement included in these
+mods is the addition of an Auto-refresh on/off toggle in the mobile Node status view.
 
 ## Disclaimer
 
