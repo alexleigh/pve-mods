@@ -56,8 +56,8 @@ been committed to the following repositories:
 Cloning the above two repositories and this repository in the same parent directory, and invoking
 `make all` in this repository, will generate all the modified files within the directory where
 this repository is checked out. Building these files requires a development environment where,
-at a minimum, the Proxmox packages pve-manager, proxmox-widget-toolkit, and
-[pve-docs](https://github.com/proxmox/pve-docs) can be successfully built.
+at a minimum, the Proxmox packages `pve-manager`, `proxmox-widget-toolkit`, and
+[`pve-docs`](https://github.com/proxmox/pve-docs) can be successfully built.
 
 Once the modified files have been built, running `make install` will install the files to the
 current system, replacing PVE distributed files. Prior to running `make install`, it is a good
