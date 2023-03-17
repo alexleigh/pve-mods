@@ -2,7 +2,24 @@ diff --git a/usr/share/pve-manager/touch/pvemanager-mobile.js b/../pvemanager-mo
 index 53b897c..0accbc3 100644
 --- a/usr/share/pve-manager/touch/pvemanager-mobile.js
 +++ b/../pvemanager-mobile.js
-@@ -3833,6 +3833,10 @@ Ext.define('PVE.NodeInfo', {
+@@ -3816,56 +3816,70 @@ Ext.define('PVE.Datacenter', {
+ 
+ 	me.reload();
+     }
+ 
+ });
+ 
+ Ext.define('PVE.NodeInfo', {
+     extend: 'Ext.Component',
+     alias: 'widget.pveNodeInfo',
+ 
+     config: {
+ 	style: 'background-color: white;',
+ 	styleHtmlContent: true,
+ 	data: [],
+ 	tpl: [
+ 	    '<table style="margin-bottom:0px;">',
+ 	    '<tr><td>Version:</td><td>{pveversion}</td></tr>',
  	    '<tr><td>Memory:</td><td>{[this.meminfo(values)]}</td></tr>',
  	    '<tr><td>CPU:</td><td>{[this.cpuinfo(values)]}</td></tr>',
  	    '<tr><td>Uptime:</td><td>{[Proxmox.Utils.format_duration_long(values.uptime)]}</td></tr>',
@@ -13,7 +30,15 @@ index 53b897c..0accbc3 100644
  	    '</table>',
  	    {
  		meminfo: function(values) {
-@@ -3848,7 +3852,17 @@ Ext.define('PVE.NodeInfo', {
+ 		    var d = values.memory;
+ 		    if (!d) {
+ 			return '-';
+ 		    }
+ 		    return Proxmox.Utils.format_size(d.used || 0) + " of " + Proxmox.Utils.format_size(d.total);
+ 		},
+ 		cpuinfo: function(values) {
+ 		    if (!values.cpuinfo) {
+ 			return '-';
  		    }
  		    var per = values.cpu * 100;
  		    return per.toFixed(2) + "% (" + values.cpuinfo.cpus + " CPUs)";
@@ -32,7 +57,41 @@ index 53b897c..0accbc3 100644
  	    }
  	]
      },
-@@ -3980,6 +3994,39 @@ Ext.define('PVE.NodeSummary', {
+ });
+ 
+ Ext.define('PVE.NodeSummary', {
+     extend: 'PVE.Page',
+     alias: 'widget.pveNodeSummary',
+ 
+     statics: {
+ 	pathMatch: function(loc) {
+ 	    return loc.match(/^nodes\/([^\s\/]+)$/);
+ 	}
+     },
+ 
+     nodename: undefined,
+ 
+     config: {
+ 	items: [
+ 	    { 
+@@ -3963,60 +3977,86 @@ Ext.define('PVE.NodeSummary', {
+ 	});
+ 
+ 	Proxmox.Utils.API2Request({
+ 	    url: '/nodes/' + me.nodename + '/qemu',
+ 	    method: 'GET',
+ 	    success: function(response) {
+ 		var d = response.result.data;
+ 		d.forEach(function(el) { el.type = 'qemu'; el.nodename = me.nodename });
+ 		me.store.each(function(rec) {
+ 		    if (rec.get('type') === 'qemu') {
+ 			rec.destroy();
+ 		    }
+ 		});
+ 		me.store.add(d);
+ 	    },
+ 	    failure: error_handler
+ 	});
  
      },
  
@@ -72,7 +131,12 @@ index 53b897c..0accbc3 100644
      initialize: function() {
  	var me = this;
  
-@@ -3992,14 +4039,7 @@ Ext.define('PVE.NodeSummary', {
+ 	var match = me.self.pathMatch(me.getAppUrl());
+ 	if (!match) {
+ 	    throw "pathMatch failed";
+ 	}
+ 
+ 	me.nodename = match[1];
  
  	me.down('titlebar').setTitle(gettext('Node') + ': ' + me.nodename);
  
@@ -88,3 +152,20 @@ index 53b897c..0accbc3 100644
  
  	me.store = Ext.create('Ext.data.Store', {
  	    fields: [ 'name', 'vmid', 'nodename', 'type', 'memory', 'uptime', 'mem', 'maxmem', 'cpu', 'cpus'],
+ 	    sorters: ['vmid'],
+ 	    grouper: {
+ 		groupFn: function(record) {
+ 		    return record.get('type');
+ 		}
+ 	    },
+ 	});
+ 
+ 	var list = me.down('list');
+ 	list.setStore(me.store);
+ 
+ 	me.reload();
+ 
+ 	this.callParent();
+     }
+ });
+ Ext.define('PVE.MigrateBase', {

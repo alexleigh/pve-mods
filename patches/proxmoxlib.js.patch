@@ -2,7 +2,24 @@ diff --git a/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js b/../prox
 index 34a0d1e..6444bc8 100644
 --- a/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
 +++ b/../proxmoxlib.js
-@@ -1017,6 +1017,10 @@ utilities: {
+@@ -1000,40 +1000,44 @@ utilities: {
+ 	if (!Ext.isNumeric(value)) {
+ 	    return '';
+ 	}
+ 	return Proxmox.Utils.format_size(value);
+     },
+ 
+     render_cpu_model: function(cpu) {
+ 	let socketText = cpu.sockets > 1 ? gettext('Sockets') : gettext('Socket');
+ 	return `${cpu.cpus} x ${cpu.model} (${cpu.sockets.toString()} ${socketText})`;
+     },
+ 
+     /* this is different for nodes */
+     render_node_cpu_usage: function(value, record) {
+ 	return Proxmox.Utils.render_cpu_usage(value, record.cpus);
+     },
+ 
+     render_node_size_usage: function(record) {
  	return Proxmox.Utils.render_size_usage(record.used, record.total);
      },
  
@@ -13,3 +30,20 @@ index 34a0d1e..6444bc8 100644
      loadTextFromFile: function(file, callback, maxBytes) {
  	let maxSize = maxBytes || 8192;
  	if (file.size > maxSize) {
+ 	    Ext.Msg.alert(gettext('Error'), gettext("Invalid file size: ") + file.size);
+ 	    return;
+ 	}
+ 	let reader = new FileReader();
+ 	reader.onload = evt => callback(evt.target.result);
+ 	reader.readAsText(file);
+     },
+ 
+     parsePropertyString: function(value, defaultKey) {
+ 	var res = {},
+ 	    error;
+ 
+ 	if (typeof value !== 'string' || value === '') {
+ 	    return res;
+ 	}
+ 
+ 	Ext.Array.each(value.split(','), function(p) {

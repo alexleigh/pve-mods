@@ -2,7 +2,24 @@ diff --git a/usr/share/pve-manager/js/pvemanagerlib.js b/../pvemanagerlib.js
 index 68eef10..7a8d5ac 100644
 --- a/usr/share/pve-manager/js/pvemanagerlib.js
 +++ b/../pvemanagerlib.js
-@@ -38716,7 +38716,7 @@ Ext.define('PVE.node.StatusView', {
+@@ -38699,41 +38699,41 @@ Ext.define('PVE.node.LVMThinList', {
+ 		],
+ 		proxy: {
+ 		    type: 'proxmox',
+ 		    url: `/api2/json/nodes/${me.nodename}/disks/lvmthin`,
+ 		},
+ 		sorters: 'lv',
+ 	    },
+ 	});
+ 
+ 	me.callParent();
+ 
+ 	Proxmox.Utils.monStoreErrors(me, me.getStore(), true);
+ 	me.reload();
+     },
+ });
+ 
+ Ext.define('PVE.node.StatusView', {
      extend: 'Proxmox.panel.StatusView',
      alias: 'widget.pveNodeStatus',
  
@@ -11,7 +28,41 @@ index 68eef10..7a8d5ac 100644
      bodyPadding: '15 5 15 5',
  
      layout: {
-@@ -38797,6 +38797,38 @@ Ext.define('PVE.node.StatusView', {
+ 	type: 'table',
+ 	columns: 2,
+ 	tableAttrs: {
+ 	    style: {
+ 		width: '100%',
+ 	    },
+ 	},
+     },
+ 
+     defaults: {
+ 	xtype: 'pmxInfoWidget',
+ 	padding: '0 10 5 10',
+     },
+ 
+     items: [
+ 	{
+ 	    itemId: 'cpu',
+@@ -38780,40 +38780,72 @@ Ext.define('PVE.node.StatusView', {
+ 	    },
+ 	    padding: '0 10 10 10',
+ 	},
+ 	{
+ 	    iconCls: 'fa fa-fw fa-hdd-o',
+ 	    itemId: 'rootfs',
+ 	    title: '/ ' + gettext('HD space'),
+ 	    valueField: 'rootfs',
+ 	    maxField: 'rootfs',
+ 	    renderer: Proxmox.Utils.render_node_size_usage,
+ 	},
+ 	{
+ 	    iconCls: 'fa fa-fw fa-refresh',
+ 	    itemId: 'swap',
+ 	    printSize: true,
+ 	    title: gettext('SWAP usage'),
+ 	    valueField: 'swap',
  	    maxField: 'swap',
  	    renderer: Proxmox.Utils.render_node_size_usage,
  	},
@@ -50,3 +101,20 @@ index 68eef10..7a8d5ac 100644
  	{
  	    xtype: 'box',
  	    colspan: 2,
+ 	    padding: '0 0 20 0',
+ 	},
+ 	{
+ 	    itemId: 'cpus',
+ 	    colspan: 2,
+ 	    printBar: false,
+ 	    title: gettext('CPU(s)'),
+ 	    textField: 'cpuinfo',
+ 	    renderer: Proxmox.Utils.render_cpu_model,
+ 	    value: '',
+ 	},
+ 	{
+ 	    itemId: 'kversion',
+ 	    colspan: 2,
+ 	    title: gettext('Kernel Version'),
+ 	    printBar: false,
+ 	    textField: 'kversion',

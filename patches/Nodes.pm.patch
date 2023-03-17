@@ -2,7 +2,24 @@ diff --git a/usr/share/perl5/PVE/API2/Nodes.pm b/../Nodes.pm
 index 47c2d74..8c90359 100644
 --- a/usr/share/perl5/PVE/API2/Nodes.pm
 +++ b/../Nodes.pm
-@@ -412,6 +412,70 @@ __PACKAGE__->register_method({
+@@ -395,40 +395,104 @@ __PACKAGE__->register_method({
+ 	};
+ 
+ 	$res->{swap} = {
+ 	    free => $meminfo->{swapfree},
+ 	    total => $meminfo->{swaptotal},
+ 	    used => $meminfo->{swapused},
+ 	};
+ 
+ 	$res->{pveversion} = PVE::pvecfg::package() . "/" .
+ 	    PVE::pvecfg::version_text();
+ 
+ 	my $dinfo = df('/', 1);     # output is bytes
+ 
+ 	$res->{rootfs} = {
+ 	    total => $dinfo->{blocks},
+ 	    avail => $dinfo->{bavail},
+ 	    used => $dinfo->{used},
  	    free => $dinfo->{blocks} - $dinfo->{used},
  	};
  
@@ -73,3 +90,20 @@ index 47c2d74..8c90359 100644
  	return $res;
      }});
  
+ __PACKAGE__->register_method({
+     name => 'netstat',
+     path => 'netstat',
+     method => 'GET',
+     permissions => {
+ 	check => ['perm', '/nodes/{node}', [ 'Sys.Audit' ]],
+     },
+     description => "Read tap/vm network device interface counters",
+     proxyto => 'node',
+     parameters => {
+ 	additionalProperties => 0,
+ 	properties => {
+ 	    node => get_standard_option('pve-node'),
+ 	},
+     },
+     returns => {
+ 	type => "array",
