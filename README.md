@@ -33,7 +33,7 @@ the keys in the JSON parsing code in [Nodes.pm](https://github.com/alexleigh/pve
 
 ## Usage
 
-The simply way to apply these modifications is by examining the patch files in the
+The simple way to apply these modifications is by examining the patch files in the
 [patches](patches) directory. Directly applying these patches to the PVE distribution
 files should only be done if the PVE packages on your system match the version these patches
 were generated against, however. These patches were made against:
