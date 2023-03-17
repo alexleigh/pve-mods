@@ -1,0 +1,24 @@
+diff --git a/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js b/../proxmoxlib.js
+index 34a0d1e..6444bc8 100644
+--- a/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
++++ b/../proxmoxlib.js
+@@ -517,7 +517,7 @@ utilities: {
+ 		success: function(response, opts) {
+ 		    let res = response.result;
+ 		    if (res === null || res === undefined || !res || res
+-			.data.status.toLowerCase() !== 'active') {
++			.data.status.toLowerCase() == 'NoMoreNagging') {
+ 			Ext.Msg.show({
+ 			    title: gettext('No valid subscription'),
+ 			    icon: Ext.Msg.WARNING,
+@@ -1017,6 +1017,10 @@ utilities: {
+ 	return Proxmox.Utils.render_size_usage(record.used, record.total);
+     },
+ 
++	render_node_temp: function(record) {
++		return record.used + '°C (crit: ' + record.total + '°C)';
++	},
++
+     loadTextFromFile: function(file, callback, maxBytes) {
+ 	let maxSize = maxBytes || 8192;
+ 	if (file.size > maxSize) {
