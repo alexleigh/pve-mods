@@ -1,9 +1,4 @@
-DESTDIR=
-TOOLKITDIR=${DESTDIR}/usr/share/javascript/proxmox-widget-toolkit
-WWWBASEDIR=${DESTDIR}/usr/share/pve-manager
-WWWJSDIR=${WWWBASEDIR}/js
-WWWTOUCHDIR=${WWWBASEDIR}/touch
-PERLLIBDIR=${DESTDIR}/usr/share/perl5
+include defines.mk
 
 all: proxmoxlib.js Nodes.pm pvemanagerlib.js pvemanager-mobile.js
 
@@ -33,7 +28,7 @@ install:
 	install -m 0644 pvemanager-mobile.js ${WWWTOUCHDIR}
 
 clean:
-	rm -f proxmoxlib.js Nodes.pm pvemanagerlib.js pvemanager-mobile.js
+	-rm -f proxmoxlib.js Nodes.pm pvemanagerlib.js pvemanager-mobile.js
 
 backup:
 	mkdir -p orig
@@ -53,4 +48,4 @@ restore:
 	install -m 0644 orig/pvemanager-mobile.js ${WWWTOUCHDIR}
 
 cleanbackup:
-	rm -f orig/proxmoxlib.js orig/Nodes.pm orig/pvemanagerlib.js orig/pvemanager-mobile.js
+	-rm -f orig/proxmoxlib.js orig/Nodes.pm orig/pvemanagerlib.js orig/pvemanager-mobile.js
