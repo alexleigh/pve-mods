@@ -24,12 +24,30 @@ will erase the modifications.
 
 ## Requirements
 
-lm-sensors needs to be installed on the hypervisor for the probes to work. To support hard
-drive temperatures, the `drivetemp` module must be loaded for lm-sensors to report SMART
-temperature readings. Use `sensors -j` to get the JSON output from lm-sensors. The JSON
-output is used by the modified pve-manager Perl API to report temperatures. Take note of
-the keys in the JSON tree leading to the relevant temperature values, as they need to match
-the keys in the JSON parsing code in [Nodes.pm](https://github.com/alexleigh/pve-manager/blob/v7.3-6/PVE/API2/Nodes.pm#L424).
+lm-sensors needs to be installed on the hypervisor for the probes to work. To install
+lm-sensors, run the following on the hypervisor:
+
+```shell
+apt install lm-sensors
+```
+
+To show hard drive temperatures, the `drivetemp` module must be loaded for lm-sensors to
+report SMART temperature readings. To manually load the `drivetemp` module, run the following
+on the hypervisor:
+
+```shell
+modprobe drivetemp
+```
+
+To confirm the SMART temperature readings are working, run the sensors command on the
+hypervisor:
+
+```shell
+sensors
+```
+
+Once the hard drive temperature sensors are confirmed to be working, you can configure the
+system to load the `drivetemp` module at boot.
 
 ## Usage
 
@@ -44,6 +62,33 @@ were generated against, however. These patches were made against:
 If the version installed on your system are different from these, the patches should not be
 applied. Instead, use the patches as a reference to make manual modifications to the affected
 files.
+
+The patches also hardcode the names of various lm-sensors probes to extract temperature
+readings. On your system these names are likely different, so the changes you need to make
+will be different from the patches. First, run the `sensors` command in JSON mode to inspect
+the JSON output:
+
+```shell
+sensors -j
+```
+
+For each probe whose value you wish to display, take note of the JSON path to reach the dictionary
+containing the temperature values, as well as the keys of the current reading and critical value.
+The path and key names go into the `%sensors_config` hash in [Nodes.pm](patches/Nodes.pm.patch).
+The keys of the `%sensors_config` can be any string as long as they are unique and do not collide
+with any existing keys in the `$res` hash. These key names in `%sensors_config` will be referenced
+by the JavaScript files used to display the temperatures.
+
+With `%sensors_config` configured, modify [pvemanagerlib.js](patches/pvemanagerlib.js.patch) to
+reference the configured probes. For each item, the `valueField` and `maxField` refer to one of
+the configured keys in `%sensors_config`. If you wish to enhance the mobile site as well, modify
+[pvemanager-mobile.js](patches/pvemanager-mobile.js.patch) to also reference the configured
+probes.
+
+Depending on the number of probes you have configured, you may need to adjust the height of the
+status area in [pvemanagerlib.js](patches/pvemanagerlib.js.patch). Also, if an odd number of
+probes was added, you may need to add a spacer to preserve the layout of items lower on the status
+panel.
 
 ### Build from source
 
