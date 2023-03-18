@@ -61,7 +61,7 @@ were generated against. These patches were made against:
 
 If the version installed on your system are different from these, the patches should not be
 applied. Instead, use the patches as a reference to make manual modifications to the affected
-files. Of the four patched files, [pvemanager-mobile.js.path](patches/pvemanager-mobile.js.patch)
+files. Of the four patched files, [pvemanager-mobile.js.patch](patches/pvemanager-mobile.js.patch)
 is an optional change that only needs to be applied if you are interested in adding the
 temperature readings to the mobile site. The other three files must be modified in order for the
 temperature readings to work.
