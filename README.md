@@ -52,16 +52,19 @@ system to load the `drivetemp` module at boot.
 ## Usage
 
 The simple way to apply these modifications is by examining the patch files in the
-[patches](patches) directory. Directly applying these patches to the PVE distribution
+[patches](patches) directory. Caution: directly applying these patches to the PVE distribution
 files should only be done if the PVE packages on your system match the version these patches
-were generated against, however. These patches were made against:
+were generated against. These patches were made against:
 
 * pve-manager 7.3-6
 * proxmox-widget-toolkit 3.5.5
 
 If the version installed on your system are different from these, the patches should not be
 applied. Instead, use the patches as a reference to make manual modifications to the affected
-files.
+files. Of the four patched files, [pvemanager-mobile.js.path](patches/pvemanager-mobile.js.patch)
+is an optional change that only needs to be applied if you are interested in adding the
+temperature readings to the mobile site. The other three files must be modified in order for the
+temperature readings to work.
 
 The patches also hardcode the names of various lm-sensors probes to extract temperature
 readings. On your system these names are likely different, so the changes you need to make
