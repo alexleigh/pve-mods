@@ -1,5 +1,5 @@
 diff --git a/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js b/../proxmoxlib.js
-index 34a0d1e..6444bc8 100644
+index 34a0d1e..136bac6 100644
 --- a/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
 +++ b/../proxmoxlib.js
 @@ -1000,40 +1000,44 @@ utilities: {
@@ -24,7 +24,7 @@ index 34a0d1e..6444bc8 100644
      },
  
 +	render_node_temp: function(record) {
-+		return record.used + '°C (crit: ' + record.total + '°C)';
++		return record.used.toFixed(1) + '°C (crit: ' + record.total.toFixed(1) + '°C)';
 +	},
 +
      loadTextFromFile: function(file, callback, maxBytes) {

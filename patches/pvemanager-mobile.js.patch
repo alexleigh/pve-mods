@@ -1,8 +1,8 @@
 diff --git a/usr/share/pve-manager/touch/pvemanager-mobile.js b/../pvemanager-mobile.js
-index 53b897c..0accbc3 100644
+index 53b897c..ff6a3a8 100644
 --- a/usr/share/pve-manager/touch/pvemanager-mobile.js
 +++ b/../pvemanager-mobile.js
-@@ -3816,56 +3816,70 @@ Ext.define('PVE.Datacenter', {
+@@ -3816,56 +3816,74 @@ Ext.define('PVE.Datacenter', {
  
  	me.reload();
      }
@@ -24,6 +24,8 @@ index 53b897c..0accbc3 100644
  	    '<tr><td>CPU:</td><td>{[this.cpuinfo(values)]}</td></tr>',
  	    '<tr><td>Uptime:</td><td>{[Proxmox.Utils.format_duration_long(values.uptime)]}</td></tr>',
 +	    '<tr><td>CPU temp:</td><td>{[this.cputemp(values)]}</td></tr>',
++	    '<tr><td>PCH temp:</td><td>{[this.pchtemp(values)]}</td></tr>',
++	    '<tr><td>NVMe temp:</td><td>{[this.nvmetemp(values)]}</td></tr>',
 +	    '<tr><td>HD1 temp:</td><td>{[this.hd1temp(values)]}</td></tr>',
 +	    '<tr><td>HD2 temp:</td><td>{[this.hd2temp(values)]}</td></tr>',
 +	    '<tr><td>HD3 temp:</td><td>{[this.hd3temp(values)]}</td></tr>',
@@ -48,9 +50,11 @@ index 53b897c..0accbc3 100644
 +			if (!temp) {
 +				return '-';
 +			}
-+			return temp.used + '°C (crit: ' + temp.total + '°C)';
++			return temp.used.toFixed(1) + '°C (crit: ' + temp.total.toFixed(1) + '°C)';
 +		},
 +		cputemp: function(values) { return this.rendertemp(values.cputemp); },
++		pchtemp: function(values) { return this.rendertemp(values.pchtemp); },
++		nvmetemp: function(values) { return this.rendertemp(values.nvmetemp); },
 +		hd1temp: function(values) { return this.rendertemp(values.hd1temp); },
 +		hd2temp: function(values) { return this.rendertemp(values.hd2temp); },
 +		hd3temp: function(values) { return this.rendertemp(values.hd3temp); }
@@ -74,7 +78,7 @@ index 53b897c..0accbc3 100644
      config: {
  	items: [
  	    { 
-@@ -3963,60 +3977,86 @@ Ext.define('PVE.NodeSummary', {
+@@ -3963,60 +3981,86 @@ Ext.define('PVE.NodeSummary', {
  	});
  
  	Proxmox.Utils.API2Request({

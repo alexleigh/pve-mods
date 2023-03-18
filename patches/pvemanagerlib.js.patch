@@ -1,5 +1,5 @@
 diff --git a/usr/share/pve-manager/js/pvemanagerlib.js b/../pvemanagerlib.js
-index 68eef10..7a8d5ac 100644
+index 68eef10..3a251cc 100644
 --- a/usr/share/pve-manager/js/pvemanagerlib.js
 +++ b/../pvemanagerlib.js
 @@ -38699,41 +38699,41 @@ Ext.define('PVE.node.LVMThinList', {
@@ -24,7 +24,7 @@ index 68eef10..7a8d5ac 100644
      alias: 'widget.pveNodeStatus',
  
 -    height: 300,
-+    height: 375,
++    height: 405,
      bodyPadding: '15 5 15 5',
  
      layout: {
@@ -45,7 +45,7 @@ index 68eef10..7a8d5ac 100644
      items: [
  	{
  	    itemId: 'cpu',
-@@ -38780,40 +38780,72 @@ Ext.define('PVE.node.StatusView', {
+@@ -38780,40 +38780,88 @@ Ext.define('PVE.node.StatusView', {
  	    },
  	    padding: '0 10 10 10',
  	},
@@ -72,6 +72,22 @@ index 68eef10..7a8d5ac 100644
 +	    title: gettext('CPU temp'),
 +	    valueField: 'cputemp',
 +	    maxField: 'cputemp',
++	    renderer: Proxmox.Utils.render_node_temp,
++	},
++	{
++	    itemId: 'pchtemp',
++	    iconCls: 'fa fa-fw fa-thermometer-half',
++	    title: gettext('PCH temp'),
++	    valueField: 'pchtemp',
++	    maxField: 'pchtemp',
++	    renderer: Proxmox.Utils.render_node_temp,
++	},
++	{
++	    itemId: 'nvmetemp',
++	    iconCls: 'fa fa-fw fa-thermometer-half',
++	    title: gettext('NVMe temp'),
++	    valueField: 'nvmetemp',
++	    maxField: 'nvmetemp',
 +	    renderer: Proxmox.Utils.render_node_temp,
 +	},
 +	{

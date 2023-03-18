@@ -1,8 +1,8 @@
 diff --git a/usr/share/perl5/PVE/API2/Nodes.pm b/../Nodes.pm
-index 47c2d74..8c90359 100644
+index 47c2d74..63e3efb 100644
 --- a/usr/share/perl5/PVE/API2/Nodes.pm
 +++ b/../Nodes.pm
-@@ -395,40 +395,104 @@ __PACKAGE__->register_method({
+@@ -395,40 +395,99 @@ __PACKAGE__->register_method({
  	};
  
  	$res->{swap} = {
@@ -23,69 +23,64 @@ index 47c2d74..8c90359 100644
  	    free => $dinfo->{blocks} - $dinfo->{used},
  	};
  
++	my %sensors_config = (
++		cputemp => {
++			jsonpath => ['coretemp-isa-0000', 'Package id 0'],
++			valkey => 'temp1_input',
++			critkey => 'temp1_crit',
++		},
++		pchtemp => {
++			jsonpath => ['pch_cannonlake-virtual-0', 'temp1'],
++			valkey => 'temp1_input',
++		},
++		nvmetemp => {
++			jsonpath => ['nvme-pci-0100', 'Composite'],
++			valkey => 'temp1_input',
++			critkey => 'temp1_crit',
++		},
++		hd1temp => {
++			jsonpath => ['drivetemp-scsi-0-0', 'temp1'],
++			valkey => 'temp1_input',
++			critkey => 'temp1_crit',
++		},
++		hd2temp => {
++			jsonpath => ['drivetemp-scsi-1-0', 'temp1'],
++			valkey => 'temp1_input',
++			critkey => 'temp1_crit',
++		},
++		hd3temp => {
++			jsonpath => ['drivetemp-scsi-2-0', 'temp1'],
++			valkey => 'temp1_input',
++			critkey => 'temp1_crit',
++		},
++	);
++	my $temp_default_val = 0;
++	my $temp_default_crit = 80;
++
 +	my $sensors = eval { decode_json(`sensors -j`); };
-+	my $cputemp_val = 0;
-+	my $cputemp_crit = 100;
-+	my $hd1temp_val = 0;
-+	my $hd1temp_crit = 70;
-+	my $hd2temp_val = 0;
-+	my $hd2temp_crit = 70;
-+	my $hd3temp_val = 0;
-+	my $hd3temp_crit = 70;
 +	if (defined($sensors)) {
-+		if (defined($sensors->{'coretemp-isa-0000'}) && defined($sensors->{'coretemp-isa-0000'}{'Package id 0'})) {
-+			if (defined($sensors->{'coretemp-isa-0000'}{'Package id 0'}{'temp1_input'})) {
-+				$cputemp_val = $sensors->{'coretemp-isa-0000'}{'Package id 0'}{'temp1_input'};
++		keys %sensors_config;
++		while (my ($k, $v) = each %sensors_config) {
++			if (!defined($v->{jsonpath})) { next; }
++			my $currref = $sensors;
++			my $pathdefined = 1;
++			for my $pathseg (@{$v->{jsonpath}}) {
++				if (defined($currref->{$pathseg})) {
++					$currref = $currref->{$pathseg}
++				} else {
++					$pathdefined = 0;
++					last;
++				}
 +			}
-+			if (defined($sensors->{'coretemp-isa-0000'}{'Package id 0'}{'temp1_crit'})) {
-+				$cputemp_crit = $sensors->{'coretemp-isa-0000'}{'Package id 0'}{'temp1_crit'};
-+			}
-+		}
-+		if (defined($sensors->{'drivetemp-scsi-0-0'}) && defined($sensors->{'drivetemp-scsi-0-0'}{'temp1'})) {
-+			if (defined($sensors->{'drivetemp-scsi-0-0'}{'temp1'}{'temp1_input'})) {
-+				$hd1temp_val = $sensors->{'drivetemp-scsi-0-0'}{'temp1'}{'temp1_input'};
-+			}
-+			if (defined($sensors->{'drivetemp-scsi-0-0'}{'temp1'}{'temp1_crit'})) {
-+				$hd1temp_crit = $sensors->{'drivetemp-scsi-0-0'}{'temp1'}{'temp1_crit'};
-+			}
-+		}
-+		if (defined($sensors->{'drivetemp-scsi-1-0'}) && defined($sensors->{'drivetemp-scsi-1-0'}{'temp1'})) {
-+			if (defined($sensors->{'drivetemp-scsi-1-0'}{'temp1'}{'temp1_input'})) {
-+				$hd2temp_val = $sensors->{'drivetemp-scsi-1-0'}{'temp1'}{'temp1_input'};
-+			}
-+			if (defined($sensors->{'drivetemp-scsi-1-0'}{'temp1'}{'temp1_crit'})) {
-+				$hd2temp_crit = $sensors->{'drivetemp-scsi-1-0'}{'temp1'}{'temp1_crit'};
-+			}
-+		}
-+		if (defined($sensors->{'drivetemp-scsi-2-0'}) && defined($sensors->{'drivetemp-scsi-2-0'}{'temp1'})) {
-+			if (defined($sensors->{'drivetemp-scsi-2-0'}{'temp1'}{'temp1_input'})) {
-+				$hd3temp_val = $sensors->{'drivetemp-scsi-2-0'}{'temp1'}{'temp1_input'};
-+			}
-+			if (defined($sensors->{'drivetemp-scsi-2-0'}{'temp1'}{'temp1_crit'})) {
-+				$hd3temp_crit = $sensors->{'drivetemp-scsi-2-0'}{'temp1'}{'temp1_crit'};
-+			}
++			if (!$pathdefined) { next; }
++			$res->{$k} = {
++				used => defined($v->{valkey}) && defined($currref->{$v->{valkey}})
++					? $currref->{$v->{valkey}} : $temp_default_val,
++				total => defined($v->{critkey}) && defined($currref->{$v->{critkey}})
++					? $currref->{$v->{critkey}} : $temp_default_crit,
++			};
 +		}
 +	}
-+
-+	$res->{cputemp} = {
-+	    used => $cputemp_val,
-+	    total => $cputemp_crit,
-+	};
-+
-+	$res->{hd1temp} = {
-+	    used => $hd1temp_val,
-+	    total => $hd1temp_crit,
-+	};
-+
-+	$res->{hd2temp} = {
-+	    used => $hd2temp_val,
-+	    total => $hd2temp_crit,
-+	};
-+
-+	$res->{hd3temp} = {
-+	    used => $hd3temp_val,
-+	    total => $hd3temp_crit,
-+	};
 +
  	return $res;
      }});
