@@ -1,22 +1,11 @@
-include defines.mk
+include ../defines.mk
+include ../common.mk
+
+SRCDIR=../..
 
 all: proxmoxlib.js Nodes.pm pvemanagerlib.js pvemanager-mobile.js
 
-proxmoxlib.js:
-	$(MAKE) -C ../proxmox-widget-toolkit/src clean $@
-	cp -a ../proxmox-widget-toolkit/src/$@ $@
-
-Nodes.pm:
-	cp -a ../pve-manager/PVE/API2/$@ $@
-
-pvemanagerlib.js:
-	$(MAKE) -C ../pve-manager/www/manager6 clean $@
-	cp -a ../pve-manager/www/manager6/$@ $@
-
-pvemanager-mobile.js:
-	$(MAKE) -C ../pve-manager/www/mobile clean $@
-	cp -a ../pve-manager/www/mobile/$@ $@
-
+.PHONY: install
 install:
 	install -d ${TOOLKITDIR}
 	install -m 0644 proxmoxlib.js ${TOOLKITDIR}
@@ -27,9 +16,11 @@ install:
 	install -d ${WWWTOUCHDIR}
 	install -m 0644 pvemanager-mobile.js ${WWWTOUCHDIR}
 
+.PHONY: clean
 clean:
 	-rm -f proxmoxlib.js Nodes.pm pvemanagerlib.js pvemanager-mobile.js
 
+.PHONY: backup
 backup:
 	mkdir -p orig
 	cp -a ${TOOLKITDIR}/proxmoxlib.js orig/
@@ -37,6 +28,7 @@ backup:
 	cp -a ${WWWJSDIR}/pvemanagerlib.js orig/
 	cp -a ${WWWTOUCHDIR}/pvemanager-mobile.js orig/
 
+.PHONY: restore
 restore:
 	install -d ${TOOLKITDIR}
 	install -m 0644 orig/proxmoxlib.js ${TOOLKITDIR}
@@ -47,5 +39,6 @@ restore:
 	install -d ${WWWTOUCHDIR}
 	install -m 0644 orig/pvemanager-mobile.js ${WWWTOUCHDIR}
 
+.PHONY: cleanbackup
 cleanbackup:
 	-rm -f orig/proxmoxlib.js orig/Nodes.pm orig/pvemanagerlib.js orig/pvemanager-mobile.js

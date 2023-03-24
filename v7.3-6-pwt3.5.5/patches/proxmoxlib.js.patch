@@ -1,5 +1,5 @@
 diff --git a/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js b/../proxmoxlib.js
-index 34a0d1e..136bac6 100644
+index 34a0d1e..8e3059c 100644
 --- a/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
 +++ b/../proxmoxlib.js
 @@ -1000,40 +1000,44 @@ utilities: {
