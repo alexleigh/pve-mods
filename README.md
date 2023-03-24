@@ -60,6 +60,10 @@ patch directories and the versions of the Proxmox packages they were generated a
 * pve-manager 7.3-6
 * proxmox-widget-toolkit 3.5.5
 
+[v7.4-3-pwt3.6.3](v7.4-3-pwt3.6.3/patches)
+* pve-manager 7.4-3
+* proxmox-widget-toolkit 3.6.3
+
 If the version installed on your system are different from these, the patches should not be
 applied. Instead, use the patches as a reference to make manual modifications to the affected
 files. Of the four patched files,
@@ -104,11 +108,17 @@ been committed to the following repositories:
 * [pve-manager](https://github.com/alexleigh/pve-manager)
 * [proxmox-widget-toolkit](https://github.com/alexleigh/proxmox-widget-toolkit)
 
-To build the modified files in the [v7.3-6-pwt3.5.5](7.3-6-pwt3.5.5) directory, use the following
+To build the modified files in the [v7.3-6-pwt3.5.5](v7.3-6-pwt3.5.5) directory, use the following
 branches:
 
 * [pve-manager/v7.3-6](https://github.com/alexleigh/pve-manager/tree/v7.3-6)
 * [proxmox-widget-toolkit/v3.5.5](https://github.com/alexleigh/proxmox-widget-toolkit/tree/v3.5.5)
+
+To build the modified files in the [v7.4-3-pwt3.6.3](v7.4-3-pwt3.6.3) directory, use the following
+branches:
+
+* [pve-manager/v7.4-3](https://github.com/alexleigh/pve-manager/tree/v7.4-3)
+* [proxmox-widget-toolkit/v3.6.3](https://github.com/alexleigh/proxmox-widget-toolkit/tree/v3.6.3)
 
 Cloning the above two repositories and this repository in the same parent directory, and invoking
 `make all` in one of the versioned subdirectories, will generate all the modified files within the

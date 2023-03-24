@@ -1,0 +1,105 @@
+diff --git a/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js b/../proxmoxlib.js
+index 631a0a9..3fb21ae 100644
+--- a/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
++++ b/../proxmoxlib.js
+@@ -1027,40 +1027,44 @@ utilities: {
+ 	if (!Ext.isNumeric(value)) {
+ 	    return '';
+ 	}
+ 	return Proxmox.Utils.format_size(value);
+     },
+ 
+     render_cpu_model: function(cpu) {
+ 	let socketText = cpu.sockets > 1 ? gettext('Sockets') : gettext('Socket');
+ 	return `${cpu.cpus} x ${cpu.model} (${cpu.sockets.toString()} ${socketText})`;
+     },
+ 
+     /* this is different for nodes */
+     render_node_cpu_usage: function(value, record) {
+ 	return Proxmox.Utils.render_cpu_usage(value, record.cpus);
+     },
+ 
+     render_node_size_usage: function(record) {
+ 	return Proxmox.Utils.render_size_usage(record.used, record.total);
+     },
+ 
++	render_node_temp: function(record) {
++		return record.used.toFixed(1) + '°C (crit: ' + record.total.toFixed(1) + '°C)';
++	},
++
+     loadTextFromFile: function(file, callback, maxBytes) {
+ 	let maxSize = maxBytes || 8192;
+ 	if (file.size > maxSize) {
+ 	    Ext.Msg.alert(gettext('Error'), gettext("Invalid file size: ") + file.size);
+ 	    return;
+ 	}
+ 	let reader = new FileReader();
+ 	reader.onload = evt => callback(evt.target.result);
+ 	reader.readAsText(file);
+     },
+ 
+     parsePropertyString: function(value, defaultKey) {
+ 	var res = {},
+ 	    error;
+ 
+ 	if (typeof value !== 'string' || value === '') {
+ 	    return res;
+ 	}
+ 
+ 	Ext.Array.each(value.split(','), function(p) {
+@@ -1462,55 +1466,40 @@ utilities: {
+ 
+ Ext.define('Proxmox.Async', {
+     singleton: true,
+ 
+     // Returns a Promise resolving to the result of an `API2Request` or rejecting to the error
+     // response on failure
+     api2: function(reqOpts) {
+ 	return new Promise((resolve, reject) => {
+ 	    delete reqOpts.callback; // not allowed in this api
+ 	    reqOpts.success = response => resolve(response);
+ 	    reqOpts.failure = response => reject(response);
+ 	    Proxmox.Utils.API2Request(reqOpts);
+ 	});
+     },
+ 
+     // Delay for a number of milliseconds.
+     sleep: function(millis) {
+ 	return new Promise((resolve, _reject) => setTimeout(resolve, millis));
+     },
+ });
+-
+-Ext.override(Ext.data.Store, {
+-    // If the store's proxy is changed while it is waiting for an AJAX
+-    // response, `onProxyLoad` will still be called for the outdated response.
+-    // To avoid displaying inconsistent information, only process responses
+-    // belonging to the current proxy.
+-    onProxyLoad: function(operation) {
+-	let me = this;
+-	if (operation.getProxy() === me.getProxy()) {
+-	    me.callParent(arguments);
+-	} else {
+-	    console.log(`ignored outdated response: ${operation.getRequest().getUrl()}`);
+-	}
+-    },
+-});
+ Ext.define('Proxmox.Schema', { // a singleton
+     singleton: true,
+ 
+     authDomains: {
+ 	pam: {
+ 	    name: 'Linux PAM',
+ 	    add: false,
+ 	    edit: false,
+ 	    pwchange: true,
+ 	    sync: false,
+ 	},
+ 	openid: {
+ 	    name: gettext('OpenID Connect Server'),
+ 	    ipanel: 'pmxAuthOpenIDPanel',
+ 	    add: true,
+ 	    edit: true,
+ 	    tfa: false,
+ 	    pwchange: false,
+ 	    sync: false,
+ 	    iconCls: 'pmx-itype-icon-openid-logo',
