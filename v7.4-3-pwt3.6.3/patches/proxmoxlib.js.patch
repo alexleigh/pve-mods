@@ -47,12 +47,7 @@ index 631a0a9..3fb21ae 100644
  	}
  
  	Ext.Array.each(value.split(','), function(p) {
-@@ -1462,55 +1466,40 @@ utilities: {
- 
- Ext.define('Proxmox.Async', {
-     singleton: true,
- 
-     // Returns a Promise resolving to the result of an `API2Request` or rejecting to the error
+@@ -1467,44 +1471,45 @@ Ext.define('Proxmox.Async', {
      // response on failure
      api2: function(reqOpts) {
  	return new Promise((resolve, reject) => {
@@ -68,21 +63,24 @@ index 631a0a9..3fb21ae 100644
  	return new Promise((resolve, _reject) => setTimeout(resolve, millis));
      },
  });
--
--Ext.override(Ext.data.Store, {
--    // If the store's proxy is changed while it is waiting for an AJAX
--    // response, `onProxyLoad` will still be called for the outdated response.
--    // To avoid displaying inconsistent information, only process responses
+ 
+ Ext.override(Ext.data.Store, {
+     // If the store's proxy is changed while it is waiting for an AJAX
+     // response, `onProxyLoad` will still be called for the outdated response.
+     // To avoid displaying inconsistent information, only process responses
 -    // belonging to the current proxy.
--    onProxyLoad: function(operation) {
--	let me = this;
++    // belonging to the current proxy. However, do not apply this workaround
++    // to the mobile UI, as Sencha Touch has an incompatible internal API.
+     onProxyLoad: function(operation) {
+ 	let me = this;
 -	if (operation.getProxy() === me.getProxy()) {
--	    me.callParent(arguments);
--	} else {
--	    console.log(`ignored outdated response: ${operation.getRequest().getUrl()}`);
--	}
--    },
--});
++	if (Proxmox.Utils.toolkit === 'touch' || operation.getProxy() === me.getProxy()) {
+ 	    me.callParent(arguments);
+ 	} else {
+ 	    console.log(`ignored outdated response: ${operation.getRequest().getUrl()}`);
+ 	}
+     },
+ });
  Ext.define('Proxmox.Schema', { // a singleton
      singleton: true,
  
@@ -97,9 +95,3 @@ index 631a0a9..3fb21ae 100644
  	openid: {
  	    name: gettext('OpenID Connect Server'),
  	    ipanel: 'pmxAuthOpenIDPanel',
- 	    add: true,
- 	    edit: true,
- 	    tfa: false,
- 	    pwchange: false,
- 	    sync: false,
- 	    iconCls: 'pmx-itype-icon-openid-logo',
