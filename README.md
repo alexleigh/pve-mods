@@ -107,8 +107,8 @@ been committed to the following repositories:
 To build the modified files in the [v7.3-6-pwt3.5.5](7.3-6-pwt3.5.5) directory, use the following
 branches:
 
-* [pve-manager](https://github.com/alexleigh/pve-manager/tree/v7.3-6)
-* [proxmox-widget-toolkit](https://github.com/alexleigh/proxmox-widget-toolkit/tree/v3.5.5)
+* [pve-manager/v7.3-6](https://github.com/alexleigh/pve-manager/tree/v7.3-6)
+* [proxmox-widget-toolkit/v3.5.5](https://github.com/alexleigh/proxmox-widget-toolkit/tree/v3.5.5)
 
 Cloning the above two repositories and this repository in the same parent directory, and invoking
 `make all` in one of the versioned subdirectories, will generate all the modified files within the
