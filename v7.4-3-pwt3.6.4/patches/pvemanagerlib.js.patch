@@ -1,0 +1,141 @@
+diff --git a/usr/share/pve-manager/js/pvemanagerlib.js b/../pvemanagerlib.js
+index 8470957..24b8c02 100644
+--- a/usr/share/pve-manager/js/pvemanagerlib.js
++++ b/../pvemanagerlib.js
+@@ -39295,41 +39295,41 @@ Ext.define('PVE.node.LVMThinList', {
+ 		],
+ 		proxy: {
+ 		    type: 'proxmox',
+ 		    url: `/api2/json/nodes/${me.nodename}/disks/lvmthin`,
+ 		},
+ 		sorters: 'lv',
+ 	    },
+ 	});
+ 
+ 	me.callParent();
+ 
+ 	Proxmox.Utils.monStoreErrors(me, me.getStore(), true);
+ 	me.reload();
+     },
+ });
+ 
+ Ext.define('PVE.node.StatusView', {
+     extend: 'Proxmox.panel.StatusView',
+     alias: 'widget.pveNodeStatus',
+ 
+-    height: 300,
++    height: 420,
+     bodyPadding: '15 5 15 5',
+ 
+     layout: {
+ 	type: 'table',
+ 	columns: 2,
+ 	tableAttrs: {
+ 	    style: {
+ 		width: '100%',
+ 	    },
+ 	},
+     },
+ 
+     defaults: {
+ 	xtype: 'pmxInfoWidget',
+ 	padding: '0 10 5 10',
+     },
+ 
+     items: [
+ 	{
+ 	    itemId: 'cpu',
+@@ -39381,40 +39381,93 @@ Ext.define('PVE.node.StatusView', {
+ 	    itemId: 'rootfs',
+ 	    title: '/ ' + gettext('HD space'),
+ 	    valueField: 'rootfs',
+ 	    maxField: 'rootfs',
+ 	    renderer: Proxmox.Utils.render_node_size_usage,
+ 	},
+ 	{
+ 	    iconCls: 'fa fa-fw fa-refresh',
+ 	    itemId: 'swap',
+ 	    printSize: true,
+ 	    title: gettext('SWAP usage'),
+ 	    valueField: 'swap',
+ 	    maxField: 'swap',
+ 	    renderer: Proxmox.Utils.render_node_size_usage,
+ 	},
+ 	{
+ 	    xtype: 'box',
+ 	    colspan: 2,
+ 	    padding: '0 0 20 0',
+ 	},
++	{
++	    itemId: 'cputemp',
++	    iconCls: 'fa fa-fw fa-thermometer-half',
++	    title: gettext('CPU temp'),
++	    valueField: 'cputemp',
++	    maxField: 'cputemp',
++	    renderer: Proxmox.Utils.render_node_temp,
++	},
++	{
++	    itemId: 'hd1temp',
++	    iconCls: 'fa fa-fw fa-thermometer-half',
++	    title: gettext('HD1 temp'),
++	    valueField: 'hd1temp',
++	    maxField: 'hd1temp',
++	    renderer: Proxmox.Utils.render_node_temp,
++	},
++	{
++	    itemId: 'pchtemp',
++	    iconCls: 'fa fa-fw fa-thermometer-half',
++	    title: gettext('PCH temp'),
++	    valueField: 'pchtemp',
++	    maxField: 'pchtemp',
++	    renderer: Proxmox.Utils.render_node_temp,
++	},
++	{
++	    itemId: 'hd2temp',
++	    iconCls: 'fa fa-fw fa-thermometer-half',
++	    title: gettext('HD2 temp'),
++	    valueField: 'hd2temp',
++	    maxField: 'hd2temp',
++	    renderer: Proxmox.Utils.render_node_temp,
++	},
++	{
++	    itemId: 'nvmetemp',
++	    iconCls: 'fa fa-fw fa-thermometer-half',
++	    title: gettext('NVMe temp'),
++	    valueField: 'nvmetemp',
++	    maxField: 'nvmetemp',
++	    renderer: Proxmox.Utils.render_node_temp,
++	},
++	{
++	    itemId: 'hd3temp',
++	    iconCls: 'fa fa-fw fa-thermometer-half',
++	    title: gettext('HD3 temp'),
++	    valueField: 'hd3temp',
++	    maxField: 'hd3temp',
++	    renderer: Proxmox.Utils.render_node_temp,
++	},
++	{
++	    xtype: 'box',
++	    colspan: 2,
++	    padding: '0 0 20 0',
++	},
+ 	{
+ 	    itemId: 'cpus',
+ 	    colspan: 2,
+ 	    printBar: false,
+ 	    title: gettext('CPU(s)'),
+ 	    textField: 'cpuinfo',
+ 	    renderer: Proxmox.Utils.render_cpu_model,
+ 	    value: '',
+ 	},
+ 	{
+ 	    itemId: 'kversion',
+ 	    colspan: 2,
+ 	    title: gettext('Kernel Version'),
+ 	    printBar: false,
+ 	    textField: 'kversion',
+ 	    value: '',
+ 	},
+ 	{
+ 	    itemId: 'version',
+ 	    colspan: 2,
