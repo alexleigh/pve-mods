@@ -68,10 +68,14 @@ patch directories and the versions of the Proxmox packages they were generated a
 * pve-manager 7.4-3
 * proxmox-widget-toolkit 3.6.4
 
+[v7.4-3-pwt3.6.5](v7.4-3-pwt3.6.5/patches)
+* pve-manager 7.4-3
+* proxmox-widget-toolkit 3.6.5
+
 If the version installed on your system are different from these, the patches should not be
 applied. Instead, use the patches as a reference to make manual modifications to the affected
 files. Of the four patched files,
-[pvemanager-mobile.js.patch](v7.3-6-pwt3.5.5/patches/pvemanager-mobile.js.patch) is an optional
+[pvemanager-mobile.js.patch](v7.4-3-pwt3.6.5/patches/pvemanager-mobile.js.patch) is an optional
 change that only needs to be applied if you are interested in adding the temperature readings to the
 mobile site. The other three files must be modified in order for the temperature readings to work.
 
@@ -87,20 +91,20 @@ sensors -j
 For each probe whose value you wish to display, take note of the JSON path to reach the dictionary
 containing the temperature values, as well as the keys of the current reading and critical value.
 The path and key names go into the `%sensors_config` hash in
-[Nodes.pm](v7.3-6-pwt3.5.5/patches/Nodes.pm.patch). The keys of the `%sensors_config` can be any
+[Nodes.pm](v7.4-3-pwt3.6.5/patches/Nodes.pm.patch). The keys of the `%sensors_config` can be any
 string as long as they are unique and do not collide with any existing keys in the `$res` hash.
 These key names in `%sensors_config` will be referenced by the JavaScript files used to display the
 temperatures.
 
 With `%sensors_config` configured, modify
-[pvemanagerlib.js](v7.3-6-pwt3.5.5/patches/pvemanagerlib.js.patch) to reference the configured
+[pvemanagerlib.js](v7.4-3-pwt3.6.5/patches/pvemanagerlib.js.patch) to reference the configured
 probes. For each item, the `valueField` and `maxField` refer to one of the configured keys in
 `%sensors_config`. If you wish to enhance the mobile site as well, modify
-[pvemanager-mobile.js](v7.3-6-pwt3.5.5/patches/pvemanager-mobile.js.patch) to also reference the
+[pvemanager-mobile.js](v7.4-3-pwt3.6.5/patches/pvemanager-mobile.js.patch) to also reference the
 configured probes.
 
 Depending on the number of probes you have configured, you may need to adjust the height of the
-status area in [pvemanagerlib.js](v7.3-6-pwt3.5.5/patches/pvemanagerlib.js.patch). Also, if an odd
+status area in [pvemanagerlib.js](v7.4-3-pwt3.6.5/patches/pvemanagerlib.js.patch). Also, if an odd
 number of probes was added, you may need to add a spacer to preserve the layout of items lower on
 the status panel.
 
@@ -129,6 +133,12 @@ branches:
 
 * [pve-manager/v7.4-3](https://github.com/alexleigh/pve-manager/tree/v7.4-3)
 * [proxmox-widget-toolkit/v3.6.4](https://github.com/alexleigh/proxmox-widget-toolkit/tree/v3.6.4)
+
+To build the modified files in the [v7.4-3-pwt3.6.5](v7.4-3-pwt3.6.5) directory, use the following
+branches:
+
+* [pve-manager/v7.4-3](https://github.com/alexleigh/pve-manager/tree/v7.4-3)
+* [proxmox-widget-toolkit/v3.6.5](https://github.com/alexleigh/proxmox-widget-toolkit/tree/v3.6.5)
 
 Cloning the above two repositories and this repository in the same parent directory, and invoking
 `make all` in one of the versioned subdirectories, will generate all the modified files within the
