@@ -76,16 +76,38 @@ patch directories and the versions of the Proxmox packages they were generated a
 * pve-manager 7.4-3
 * proxmox-widget-toolkit 3.7.0
 
-If the version installed on your system are different from these, the patches should not be
-applied. Instead, use the patches as a reference to make manual modifications to the affected
-files. Of the four patched files,
+> **Warning**  
+> If the package versions installed on your system are different from these, the patches should not
+> be applied. Instead, use the patches as a reference to make manual modifications to the affected
+> files.
+
+> **Note**  
+> The patches also hardcode the names of various lm-sensors probes to extract temperature readings.
+> On your system, the probes you'd like to display and their corresponding names are likely
+> different. This is another reason why you might want to make manual modifications rather than
+> apply the patch files.
+
+### Making manual modifications
+
+To make manual modifications, using the patch files as a reference, first take a look at each of the
+patch files, and note the path to the file being patched shown in the first line of each patch file.
+These paths correspond to the files you will need to modify on your system. For each path, open the
+file in your preferred editor, for example by running the following command on your hypervisor:
+
+```shell
+nano /usr/share/perl5/PVE/API2/Nodes.pm
+```
+
+With the file open, inspect the corresponding change in the patch file, and make the same changes
+on your system file.
+
+Of the four patched files,
 [pvemanager-mobile.js.patch](v7.4-3-pwt3.6.5/patches/pvemanager-mobile.js.patch) is an optional
 change that only needs to be applied if you are interested in adding the temperature readings to the
 mobile site. The other three files must be modified in order for the temperature readings to work.
 
-The patches also hardcode the names of various lm-sensors probes to extract temperature
-readings. On your system these names are likely different, so the changes you need to make
-will be different from the patches. First, run the `sensors` command in JSON mode to inspect
+Several of the patched files deal with names of lm-sensors probes. To determine how to make the
+correct changes for your system, first run the `sensors` command in JSON mode to inspect
 the JSON output:
 
 ```shell
@@ -111,6 +133,16 @@ Depending on the number of probes you have configured, you may need to adjust th
 status area in [pvemanagerlib.js](v7.4-3-pwt3.6.5/patches/pvemanagerlib.js.patch). Also, if an odd
 number of probes was added, you may need to add a spacer to preserve the layout of items lower on
 the status panel.
+
+After all the modifications have been completed, restart the pve-proxy service for your changes to
+take effect:
+
+```shell
+systemctl restart pveproxy.service
+```
+
+If you have the pve-manager web interface open in a browser, you may need to refresh the page after
+restarting the pve-proxy service.
 
 ### Build from source
 
