@@ -80,6 +80,10 @@ patch directories and the versions of the Proxmox packages they were generated a
 * pve-manager 7.4-13
 * proxmox-widget-toolkit 3.7.3
 
+[v7.4-16-pwt3.7.3](v7.4-16-pwt3.7.3/patches)
+* pve-manager 7.4-16
+* proxmox-widget-toolkit 3.7.3
+
 > **Warning**  
 > If the package versions installed on your system are different from these, the patches should not
 > be applied. Instead, use the patches as a reference to make manual modifications to the affected
@@ -190,6 +194,12 @@ To build the modified files in the [v7.4-13-pwt3.7.3](v7.4-13-pwt3.7.3) director
 branches:
 
 * [pve-manager/v7.4-13](https://github.com/alexleigh/pve-manager/tree/v7.4-13)
+* [proxmox-widget-toolkit/v3.7.3](https://github.com/alexleigh/proxmox-widget-toolkit/tree/v3.7.3)
+
+To build the modified files in the [v7.4-16-pwt3.7.3](v7.4-16-pwt3.7.3) directory, use the following
+branches:
+
+* [pve-manager/v7.4-16](https://github.com/alexleigh/pve-manager/tree/v7.4-16)
 * [proxmox-widget-toolkit/v3.7.3](https://github.com/alexleigh/proxmox-widget-toolkit/tree/v3.7.3)
 
 Cloning the above two repositories and this repository in the same parent directory, and invoking
