@@ -1,0 +1,104 @@
+diff --git a/usr/share/perl5/PVE/API2/Nodes.pm b/../Nodes.pm
+index 9269694..9353d0b 100644
+--- a/usr/share/perl5/PVE/API2/Nodes.pm
++++ b/../Nodes.pm
+@@ -397,40 +397,99 @@ __PACKAGE__->register_method({
+ 	};
+ 
+ 	$res->{swap} = {
+ 	    free => $meminfo->{swapfree},
+ 	    total => $meminfo->{swaptotal},
+ 	    used => $meminfo->{swapused},
+ 	};
+ 
+ 	$res->{pveversion} = PVE::pvecfg::package() . "/" .
+ 	    PVE::pvecfg::version_text();
+ 
+ 	my $dinfo = df('/', 1);     # output is bytes
+ 
+ 	$res->{rootfs} = {
+ 	    total => $dinfo->{blocks},
+ 	    avail => $dinfo->{bavail},
+ 	    used => $dinfo->{used},
+ 	    free => $dinfo->{blocks} - $dinfo->{used},
+ 	};
+ 
++	my %sensors_config = (
++		cputemp => {
++			jsonpath => ['coretemp-isa-0000', 'Package id 0'],
++			valkey => 'temp1_input',
++			critkey => 'temp1_crit',
++		},
++		pchtemp => {
++			jsonpath => ['pch_cannonlake-virtual-0', 'temp1'],
++			valkey => 'temp1_input',
++		},
++		nvme1temp => {
++			jsonpath => ['nvme-pci-0100', 'Composite'],
++			valkey => 'temp1_input',
++			critkey => 'temp1_crit',
++		},
++		nvme2temp => {
++			jsonpath => ['nvme-pci-0200', 'Composite'],
++			valkey => 'temp1_input',
++			critkey => 'temp1_crit',
++		},
++		hd1temp => {
++			jsonpath => ['drivetemp-scsi-1-0', 'temp1'],
++			valkey => 'temp1_input',
++			critkey => 'temp1_crit',
++		},
++		hd2temp => {
++			jsonpath => ['drivetemp-scsi-2-0', 'temp1'],
++			valkey => 'temp1_input',
++			critkey => 'temp1_crit',
++		},
++	);
++	my $temp_default_val = 0;
++	my $temp_default_crit = 80;
++
++	my $sensors = eval { decode_json(`sensors -j`); };
++	if (defined($sensors)) {
++		keys %sensors_config;
++		while (my ($k, $v) = each %sensors_config) {
++			if (!defined($v->{jsonpath})) { next; }
++			my $currref = $sensors;
++			my $pathdefined = 1;
++			for my $pathseg (@{$v->{jsonpath}}) {
++				if (defined($currref->{$pathseg})) {
++					$currref = $currref->{$pathseg}
++				} else {
++					$pathdefined = 0;
++					last;
++				}
++			}
++			if (!$pathdefined) { next; }
++			$res->{$k} = {
++				used => defined($v->{valkey}) && defined($currref->{$v->{valkey}})
++					? $currref->{$v->{valkey}} : $temp_default_val,
++				total => defined($v->{critkey}) && defined($currref->{$v->{critkey}})
++					? $currref->{$v->{critkey}} : $temp_default_crit,
++			};
++		}
++	}
++
+ 	return $res;
+     }});
+ 
+ __PACKAGE__->register_method({
+     name => 'netstat',
+     path => 'netstat',
+     method => 'GET',
+     permissions => {
+ 	check => ['perm', '/nodes/{node}', [ 'Sys.Audit' ]],
+     },
+     description => "Read tap/vm network device interface counters",
+     proxyto => 'node',
+     parameters => {
+ 	additionalProperties => 0,
+ 	properties => {
+ 	    node => get_standard_option('pve-node'),
+ 	},
+     },
+     returns => {
+ 	type => "array",
