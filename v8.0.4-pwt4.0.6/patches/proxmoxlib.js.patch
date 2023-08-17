@@ -1,8 +1,8 @@
 diff --git a/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js b/../proxmoxlib.js
-index 21eeff9..fc14378 100644
+index 21eeff9..bdaf5db 100644
 --- a/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
 +++ b/../proxmoxlib.js
-@@ -1030,40 +1030,44 @@ utilities: {
+@@ -1030,40 +1030,47 @@ utilities: {
  	if (!Ext.isNumeric(value)) {
  	    return '';
  	}
@@ -24,6 +24,9 @@ index 21eeff9..fc14378 100644
      },
  
 +	render_node_temp: function(record) {
++		if (!record || !Ext.isNumeric(record.used) || !Ext.isNumeric(record.total)) {
++			return '-';
++		}
 +		return record.used.toFixed(1) + '°C (crit: ' + record.total.toFixed(1) + '°C)';
 +	},
 +
