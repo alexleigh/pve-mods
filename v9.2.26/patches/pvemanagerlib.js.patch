@@ -9,7 +9,7 @@
      bodyPadding: '15 5 15 5',
  
      layout: {
-@@ -52224,6 +52224,145 @@
+@@ -52224,6 +52224,167 @@
              maxField: 'swap',
              renderer: Proxmox.Utils.render_node_size_usage,
          },
@@ -22,6 +22,28 @@
 +            maxField: 'nvme0n1',
 +            printBar: true,
 +            renderer: Proxmox.Utils.render_node_nvme_life,
++            // bar shows life REMAINING (e.g. 95%) with inverted colours: the stock logic colours a
++            // HIGH ratio as warning/critical, which is backwards for remaining life. Disable it
++            // (thresholds > 1) and colour LOW remaining instead: < 25% warning, < 10% critical.
++            warningThreshold: 2,
++            criticalThreshold: 2,
++            lifeWarning: 0.25,
++            lifeCritical: 0.1,
++            updateValue: function (text, usage) {
++                Proxmox.widget.Info.prototype.updateValue.call(this, text, usage);
++                let bar = this.getComponent('progress');
++                // text is undefined on the initial (pre-data) call from initComponent; skip it
++                if (!bar || !this.printBar || text === undefined || !Ext.isNumeric(usage) || usage < 0) {
++                    return;
++                }
++                bar.removeCls('warning');
++                bar.removeCls('critical');
++                if (usage < this.lifeCritical) {
++                    bar.addCls('critical');
++                } else if (usage < this.lifeWarning) {
++                    bar.addCls('warning');
++                }
++            },
 +        },
 +        {
 +            xtype: 'box',

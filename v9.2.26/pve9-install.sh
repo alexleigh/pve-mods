@@ -25,11 +25,11 @@ RESULT="$DIR/pve9-install.json"
 EXPECT_PVE_MANAGER="9.2.26"
 EXPECT_PWT="5.2.12"
 
-# name | installed path | sha256 of WSL-validated new file | sha256 of stock (ORG) file
+# name | installed path | sha256 of WSL-validated new file | sha256 of stock (ORG) file | earlier pve-mods versions (comma list, ok to upgrade)
 FILES=(
-  "Nodes.pm|/usr/share/perl5/PVE/API2/Nodes.pm|a9587912d995a7aafdcd0cd6b7ebbe19ed320e55b4901c67b206212444200b95|675bf4d79c690bfef2d7c38f7de74010dacf3a4e55ac1049fc50942f10ade8f9"
-  "proxmoxlib.js|/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js|50ad18f4cc19467bbb1a2504163633f71891c372e505bc462f12c9cc227ba2b8|47a053d3ac9a91403bb0f69a633246da6a59f1415786d607da26e528edd2d5c7"
-  "pvemanagerlib.js|/usr/share/pve-manager/js/pvemanagerlib.js|6e7bc321809078296808ec2a62a8d0f9993212e3a8a88f4a27960cf4f97bd33d|532fcf0ae6298a190e239e2f538246ff716535dd14890f349687c3a57bd35efe"
+  "Nodes.pm|/usr/share/perl5/PVE/API2/Nodes.pm|a9587912d995a7aafdcd0cd6b7ebbe19ed320e55b4901c67b206212444200b95|675bf4d79c690bfef2d7c38f7de74010dacf3a4e55ac1049fc50942f10ade8f9|"
+  "proxmoxlib.js|/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js|50ad18f4cc19467bbb1a2504163633f71891c372e505bc462f12c9cc227ba2b8|47a053d3ac9a91403bb0f69a633246da6a59f1415786d607da26e528edd2d5c7|"
+  "pvemanagerlib.js|/usr/share/pve-manager/js/pvemanagerlib.js|fb47fd5c4a5d72b19f4b83e67cf38419946d78841cb43db89ac5ab618e091453|532fcf0ae6298a190e239e2f538246ff716535dd14890f349687c3a57bd35efe|6e7bc321809078296808ec2a62a8d0f9993212e3a8a88f4a27960cf4f97bd33d,ead62aa5c6c2c621372586915ba231384a73cdf2a803f6c8a4e8cbc12998b81b"
 )
 SERVICES=(pvedaemon pveproxy)
 
@@ -146,7 +146,7 @@ fi
 
 already=0
 for entry in "${FILES[@]}"; do
-    IFS='|' read -r name target new_h org_h <<< "$entry"
+    IFS='|' read -r name target new_h org_h prev_h <<< "$entry"
     src="$REPO/$name"
     [ -f "$src" ]    || die "missing source $src (run pve9-precheck.sh first; it builds it from ORG + patches)"
     [ -f "$target" ] || die "missing target $target"
@@ -162,6 +162,8 @@ for entry in "${FILES[@]}"; do
         log "$target: stock (ok to patch)"
     elif [ "$cur" = "$new_h" ]; then
         log "$target: already patched"; already=$((already + 1))
+    elif [ -n "$prev_h" ] && [[ ",$prev_h," == *",$cur,"* ]]; then
+        log "$target: earlier pve-mods version (ok to upgrade; backup will hold that version)"
     elif [ $FORCE -eq 1 ]; then
         log "WARNING: $target is not the expected stock file (--force)"
     else

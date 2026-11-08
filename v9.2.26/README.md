@@ -135,8 +135,10 @@ configured paths exist on your system (`sensors.config_checks` in the JSON).
 
 - Error placeholders in `Nodes.pm` show as plausible numbers (e.g. "26% remaining" means the smartctl
   JSON couldn't be read). Check the `error` field in `pvesh get /nodes/<node>/status`.
-- The NVMe life bar colours high *remaining* life as "critical", because the widget treats a high
-  ratio as bad.
+- The HD Life bar shows life *remaining* with **inverted colours**: blue when healthy, warning below 25%
+  remaining, critical below 10%. This is an `updateValue` override on that panel item; the stock
+  thresholds are disabled. Without it, the stock logic coloured a healthy 95% red.
+- Fan bars can show red when a fan runs at full PWM (current RPM = computed maximum).
 - `smartctl.py` runs as root and writes to fixed names in `/tmp`. On a host with untrusted local users,
   move the output to a root-owned directory such as `/run/smartctl/`, change the path in `Nodes.pm`,
   and run it with `python3 -I`.

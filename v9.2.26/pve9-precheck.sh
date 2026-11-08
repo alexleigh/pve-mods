@@ -55,7 +55,14 @@ DIR, REPO, OUT = os.environ["DIR"], os.environ["REPO"], os.environ["OUT"]
 VALIDATED = {
     "Nodes.pm":         "a9587912d995a7aafdcd0cd6b7ebbe19ed320e55b4901c67b206212444200b95",
     "proxmoxlib.js":    "50ad18f4cc19467bbb1a2504163633f71891c372e505bc462f12c9cc227ba2b8",
-    "pvemanagerlib.js": "6e7bc321809078296808ec2a62a8d0f9993212e3a8a88f4a27960cf4f97bd33d",
+    "pvemanagerlib.js": "fb47fd5c4a5d72b19f4b83e67cf38419946d78841cb43db89ac5ab618e091453",
+}
+# earlier pve-mods versions of a file that the installer may upgrade from
+PREVIOUS = {
+    "pvemanagerlib.js": [
+        "6e7bc321809078296808ec2a62a8d0f9993212e3a8a88f4a27960cf4f97bd33d",  # 2026-11-08 initial port
+        "ead62aa5c6c2c621372586915ba231384a73cdf2a803f6c8a4e8cbc12998b81b",  # 2026-11-08 wear-used bar (superseded)
+    ],
 }
 TARGETS = {
     "Nodes.pm":         "/usr/share/perl5/PVE/API2/Nodes.pm",
@@ -141,7 +148,8 @@ files = {}
 for name, target in TARGETS.items():
     org, new = os.path.join(REPO, "ORG", name), os.path.join(REPO, name)
     inst_h, org_h, new_h = sha256(target), sha256(org), sha256(new)
-    state = ("stock" if inst_h == org_h else "already-patched" if inst_h == new_h else "UNKNOWN")
+    state = ("stock" if inst_h == org_h else "already-patched" if inst_h == new_h
+             else "older-mod" if inst_h in PREVIOUS.get(name, []) else "UNKNOWN")
     files[name] = {
         "target": target, "installed_sha256": inst_h, "installed_stat": fstat(target),
         "installed_state": state, "dpkg_owner": run(["dpkg", "-S", target])["out"].strip(),
