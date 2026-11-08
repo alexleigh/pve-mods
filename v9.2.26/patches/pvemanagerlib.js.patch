@@ -9,7 +9,7 @@
      bodyPadding: '15 5 15 5',
  
      layout: {
-@@ -52224,6 +52224,145 @@
+@@ -52224,6 +52224,219 @@
              maxField: 'swap',
              renderer: Proxmox.Utils.render_node_size_usage,
          },
@@ -22,14 +22,73 @@
 +            maxField: 'nvme0n1',
 +            printBar: true,
 +            renderer: Proxmox.Utils.render_node_nvme_life,
++            // bar shows life REMAINING (e.g. 95%) with inverted colours: the stock logic colours a
++            // HIGH ratio as warning/critical, which is backwards for remaining life. Disable it
++            // (thresholds > 1) and colour LOW remaining instead: < 25% warning, < 10% critical.
++            warningThreshold: 2,
++            criticalThreshold: 2,
++            lifeWarning: 0.25,
++            lifeCritical: 0.1,
++            updateValue: function (text, usage) {
++                Proxmox.widget.Info.prototype.updateValue.call(this, text, usage);
++                let bar = this.getComponent('progress');
++                // text is undefined on the initial (pre-data) call from initComponent; skip it
++                if (!bar || !this.printBar || text === undefined || !Ext.isNumeric(usage) || usage < 0) {
++                    return;
++                }
++                bar.removeCls('warning');
++                bar.removeCls('critical');
++                if (usage < this.lifeCritical) {
++                    bar.addCls('critical');
++                } else if (usage < this.lifeWarning) {
++                    bar.addCls('warning');
++                }
++            },
 +        },
 +        {
-+            xtype: 'box',
-+            printBar: false,
-+            itemId: 'dummy2',
-+            colspan: 1,
-+            textField: '',
-+            padding: '0 10 10 10',
++            // md0 = RAID6 of 4x Optane M10; shows the WORST member's remaining life
++            iconCls: 'fa fa-fw fa-hdd-o',
++            itemId: 'md0life',
++            title: gettext('Opt Life'),
++            valueField: 'md0life',
++            maxField: 'md0life',
++            printBar: true,
++            renderer: (rec) => {
++                let text = Proxmox.Utils.render_node_nvme_life(rec);
++                if (text === '-') {
++                    return text;
++                }
++                if (rec.dev) {
++                    text += ' (worst: ' + String(rec.dev).replace(/^\/dev\//, '') + ')';
++                }
++                if (rec.alerts) {
++                    text += ' - CHECK SMART';
++                }
++                return text;
++            },
++            // same inverted colouring as HD Life
++            warningThreshold: 2,
++            criticalThreshold: 2,
++            lifeWarning: 0.25,
++            lifeCritical: 0.1,
++            updateValue: function (text, usage) {
++                Proxmox.widget.Info.prototype.updateValue.call(this, text, usage);
++                let bar = this.getComponent('progress');
++                if (!bar || !this.printBar || text === undefined) {
++                    return;
++                }
++                bar.removeCls('warning');
++                bar.removeCls('critical');
++                // '-' = no data (Nodes.pm sends used=null): stock calc yields 0, don't paint it red
++                if (text === '-' || !Ext.isNumeric(usage) || usage < 0) {
++                    return;
++                }
++                if (usage < this.lifeCritical) {
++                    bar.addCls('critical');
++                } else if (usage < this.lifeWarning) {
++                    bar.addCls('warning');
++                }
++            },
 +        },
 +        {
 +            itemId: 'nvme2temp',
@@ -38,6 +97,21 @@
 +            valueField: 'nvme2temp',
 +            maxField: 'nvme2temp',
 +            renderer: Proxmox.Utils.render_node_temp,
++        },
++        {
++            // hottest of the md0 RAID members (4x Optane M10)
++            itemId: 'opttemp',
++            iconCls: 'fa fa-fw fa-thermometer-half',
++            title: gettext('Opt temp'),
++            valueField: 'opttemp',
++            maxField: 'opttemp',
++            renderer: (rec) => {
++                let text = Proxmox.Utils.render_node_temp(rec);
++                if (text !== '-' && rec.dev) {
++                    text += ' (' + rec.dev + ')';
++                }
++                return text;
++            },
 +        },
 +        {
 +            xtype: 'box',

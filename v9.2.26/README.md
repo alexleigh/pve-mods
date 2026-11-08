@@ -1,8 +1,9 @@
 # pve-mods for Proxmox VE 9.2.26
 
 These mods add CPU, motherboard and NVMe temperatures, fan speeds (with PWM-based bars), NVMe wear
-("HD Life") and [Fanpico](https://github.com/tjko/fanpico) sensors to the node **Summary → Status**
-panel of the Proxmox VE web interface.
+for the boot drive ("HD Life") and for an md RAID of Optane drives ("Opt Life" / "Opt temp"), and
+[Fanpico](https://github.com/tjko/fanpico) sensors to the node **Summary → Status** panel of the
+Proxmox VE web interface. See [Dashboard panels](#dashboard-panels).
 
 This is a port of the [v8.2.4](../v8.2.4) mods (Rev 1 + Rev 2) to PVE 9. It's based on the work by
 [alexleigh](https://github.com/alexleigh/pve-mods).
@@ -28,9 +29,9 @@ were re-applied by hand at the same places in the code:
 
 | File | Where | Change |
 |---|---|---|
-| `Nodes.pm` | end of the `status` API method, after the `rootfs` block | NVMe life (from `/tmp/smartctl.<dev>.json`), lm-sensors temps and fans, picofan |
+| `Nodes.pm` | end of the `status` API method, after the `rootfs` block | extra keys in the status API: `nvme0n1`, `md0life`, `opttemp`, the lm-sensors temps and fans, and the picofan values (see [Dashboard panels](#dashboard-panels)) |
 | `proxmoxlib.js` | after `render_node_size_usage` | `render_node_temp`, `render_node_fan`, `render_node_nvme_life` |
-| `pvemanagerlib.js` | `PVE.node.StatusView` | height 350 → 660, plus the panel items after `swap` |
+| `pvemanagerlib.js` | `PVE.node.StatusView` | height 350 → 660, plus the panel items after `swap` (HD Life and Opt Life with inverted-colour `updateValue` overrides, Opt temp with a custom renderer) |
 
 Everything added is wrapped in `pve-mods (Zitt)` … `end pve-mods` comments.
 
@@ -44,9 +45,25 @@ Fixes made while porting:
 - PVE 9 added a `returns` schema to the status method. It keeps `additionalProperties => 1`, so the
   extra keys pass through.
 
-`smartctl.py` is the updated collector. It fixes an exit-code typo (`sys,exit`) and can also collect
-the NVMe members of an md RAID that holds swap (writes `/tmp/smartctl.<mdX>.json`; not shown in the
-GUI yet).
+`smartctl.py` is the updated collector. It fixes an exit-code typo (`sys,exit`) and also collects the
+NVMe members of the md RAID that holds swap into `/tmp/smartctl.devmd0.json`, which feeds **Opt Life**.
+
+## Dashboard panels
+
+| Panel | Position | Source | Display |
+|---|---|---|---|
+| **HD Life** | left, under HD space | `/tmp/smartctl.nvme0n1.json` (`percentage_used`), via the NVMe partition mounted on `/boot*` | `95% remaining`; bar = remaining life |
+| **Opt Life** | right of HD Life | `/tmp/smartctl.devmd0.json`: the **worst** md0 member | `100% remaining (worst: nvme1n1)`; adds `- CHECK SMART` if any member reports a critical warning or media errors |
+| NVMe2 temp | left | `sensors -j` `nvme-pci-0200` Composite (on this host that's the **boot** NVMe, bus 02:00) | °C with crit |
+| **Opt temp** | right of NVMe2 temp | the **hottest** md0 member: members from `/sys/block/md0/slaves/`, temps from `/sys/block/<dev>/device/hwmon*/temp1_input` (survives renumbering) | `54.9°C (crit: 70.0°C) (nvme1n1)`; crit = the member's `temp1_crit`, else 70 °C (Optane M10 operating max) |
+| CPU temp, CPU temp2, Mobo temp | | `sensors -j` (coretemp, nct6798) | °C with crit |
+| Fan1/2/4/6/7 | | `sensors -j` nct6798 RPM; bar max from PWM (`/sys/devices/platform/nct6775.656/hwmon/hwmon*/pwmN`) | RPM |
+| Fan3, temp In/Out, picoFan die | | `/opt/picofan.py` (MQTT) | `-` when there's no MQTT data |
+
+**Life bars use inverted colours.** HD Life and Opt Life show life *remaining*, so the stock logic
+(warning above 75%, critical above 90%) would paint a healthy drive red. Those two items override
+`updateValue`: stock thresholds off, **warning below 25% remaining, critical below 10%**. No data (`-`)
+stays uncoloured. Temperature and fan bars use the stock thresholds (a percentage of crit or max).
 
 ## Files
 
@@ -56,8 +73,9 @@ GUI yet).
 | `ORG/` | Put the stock 9.2.26 files here. (`*.pm` and `*.js` are gitignored.) |
 | `pve9-precheck.sh` | Read-only checks. Builds the modified files from `ORG/` + `patches/` and writes `pve9-precheck.json`. |
 | `pve9-install.sh` | Installer: verifies, backs up, installs, smoke-tests, rolls back automatically on failure; `--restore` reverts. |
-| `smartctl.py` | Run as root (cron and/or a systemd oneshot). Writes `/tmp/smartctl.<dev>.json`. |
+| `smartctl.py` | Run as root (cron and/or a systemd oneshot). Writes `/tmp/smartctl.<boot dev>.json` (HD Life) and `/tmp/smartctl.devmd0.json` (Opt Life). |
 | `smartctl-nvme0n1.export.service` | Example systemd unit for running `smartctl.py` at boot |
+| `pve-mods-apt-hook.sh` | Optional apt hook: after every dpkg run, warns (terminal, journal, one email to root) if an upgrade replaced the modified files. Uses the manifest `/etc/pve-mods/installed.sha256` that `pve9-install.sh` writes. |
 | `versions.txt` | `pveversion -v` excerpt from the build host |
 | `../v8.2.4/picofan.py` | Fanpico MQTT reader (unchanged; fill in your broker and credentials) |
 
@@ -91,13 +109,25 @@ bash pve9-precheck.sh            # look at pve9-precheck.json: ready_to_install,
 # 3. install (backup in /root/pve-mods-backup/<timestamp>/, automatic rollback on failure)
 bash pve9-install.sh --dry-run
 bash pve9-install.sh
+
+# 4. optional: warn when a future apt upgrade overwrites the mods
+bash pve-mods-apt-hook.sh install
+bash pve-mods-apt-hook.sh test       # shows the warning you'd get; no mail, no log
 ```
 
-Then hard-refresh the browser (Ctrl+F5).
+Then hard-refresh the browser (Ctrl+F5). If you started the install from the web Shell, reload the
+page and reopen the Shell (see below).
+
+Install and `--restore` restart `pvedaemon`/`pveproxy`, which also drops the **web GUI Shell**. So
+the installer re-launches itself as a transient systemd unit (`pve-mods-install-<timestamp>`) and
+follows its output. If your console drops, the install still completes; reconnect and read
+`pve9-install.log` / `pve9-install.json`. `--foreground` disables this (use it only from SSH).
 
 The installer refuses to run if the package versions differ, if a modified file doesn't match the
 sha256 it was validated with, or if an installed file is neither stock nor already patched.
 `--force` overrides the version and hash guards. The rollback after a failure always applies.
+Earlier versions of these mods are recognised and upgraded in place. A re-run on an up-to-date
+system also restarts `pvedaemon`/`pveproxy` if they're running code older than the installed files.
 
 **Revert:**
 
@@ -135,8 +165,10 @@ configured paths exist on your system (`sensors.config_checks` in the JSON).
 
 - Error placeholders in `Nodes.pm` show as plausible numbers (e.g. "26% remaining" means the smartctl
   JSON couldn't be read). Check the `error` field in `pvesh get /nodes/<node>/status`.
-- The NVMe life bar colours high *remaining* life as "critical", because the widget treats a high
-  ratio as bad.
+- Opt Life / Opt temp assume the RAID is `md0`, and Opt Life reads `/tmp/smartctl.devmd0.json`. Opt
+  Life refreshes only when `smartctl.py` runs (e.g. every 6 h); Opt temp is live.
+- The "NVMe2 temp" label is historical: on this host it's the boot NVMe.
+- Fan bars can show red when a fan runs at full PWM (current RPM = computed maximum).
 - `smartctl.py` runs as root and writes to fixed names in `/tmp`. On a host with untrusted local users,
   move the output to a root-owned directory such as `/run/smartctl/`, change the path in `Nodes.pm`,
   and run it with `python3 -I`.
