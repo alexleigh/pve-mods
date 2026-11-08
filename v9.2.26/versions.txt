@@ -1,0 +1,2 @@
+pve-manager: 9.2.26 (running version: 9.2.26/41a0e2e09b9e6f9d)
+proxmox-widget-toolkit: 5.2.12
