@@ -53,15 +53,21 @@ DIR, REPO, OUT = os.environ["DIR"], os.environ["REPO"], os.environ["OUT"]
 
 # sha256 of the files that were validated in WSL (Ubuntu 26.04, perl 5.40.1, node 22)
 VALIDATED = {
-    "Nodes.pm":         "a9587912d995a7aafdcd0cd6b7ebbe19ed320e55b4901c67b206212444200b95",
+    "Nodes.pm":         "35486e6a7691cf85765f839e72230289f9e9143bd0b9beb972cc74c145bc4b99",
     "proxmoxlib.js":    "50ad18f4cc19467bbb1a2504163633f71891c372e505bc462f12c9cc227ba2b8",
-    "pvemanagerlib.js": "fb47fd5c4a5d72b19f4b83e67cf38419946d78841cb43db89ac5ab618e091453",
+    "pvemanagerlib.js": "6767406aee6b4cd57eed33b0992e50e88430cea3bb43937411385cd17a5c2760",
 }
 # earlier pve-mods versions of a file that the installer may upgrade from
 PREVIOUS = {
+    "Nodes.pm": [
+        "a9587912d995a7aafdcd0cd6b7ebbe19ed320e55b4901c67b206212444200b95",  # 2026-11-08 initial port
+        "b19a02b9ad60ac941c77b3d06331c597e076641b62e8878b92251119713c9de9",  # 2026-11-08 + md0life
+    ],
     "pvemanagerlib.js": [
         "6e7bc321809078296808ec2a62a8d0f9993212e3a8a88f4a27960cf4f97bd33d",  # 2026-11-08 initial port
         "ead62aa5c6c2c621372586915ba231384a73cdf2a803f6c8a4e8cbc12998b81b",  # 2026-11-08 wear-used bar (superseded)
+        "fb47fd5c4a5d72b19f4b83e67cf38419946d78841cb43db89ac5ab618e091453",  # 2026-11-08 HD Life inverted colours
+        "842185ae0a62241ad7736a6c36122c754c2a932f3e0c61dc11e2a060ed5373ef",  # 2026-11-08 + Opt Life
     ],
 }
 TARGETS = {

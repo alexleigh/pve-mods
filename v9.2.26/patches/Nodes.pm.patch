@@ -1,6 +1,6 @@
 --- ORG/Nodes.pm
 +++ Nodes.pm
-@@ -558,6 +558,211 @@
+@@ -558,6 +558,289 @@
              free => $dinfo->{blocks} - $dinfo->{used},
          };
  
@@ -52,6 +52,84 @@
 +                }
 +            }
 +            close($mnt);
++        }
++
++        # --- pve-mods (Zitt): md0 RAID member wear, worst member wins ---
++        # /tmp/smartctl.devmd0.json (from /opt/smartctl.py) = { "/dev/nvmeXn1" => {smartctl -j}, ... }
++        # On any problem 'used' stays undef (JSON null), so the GUI shows '-' instead of a fake number.
++        {
++            my $mdfile = '/tmp/smartctl.devmd0.json';
++            my $md = { used => undef, total => '100' };
++            if (open(my $fh, '<', $mdfile)) {
++                my $content = do { local $/; <$fh> };
++                close($fh);
++                my $members = eval { decode_json($content) };
++                if (ref($members) eq 'HASH' && %$members) {
++                    my ($worst_dev, $worst_used, $n, $alerts) = (undef, -1, 0, 0);
++                    for my $dev (sort keys %$members) {
++                        my $log = ref($members->{$dev}) eq 'HASH'
++                            ? $members->{$dev}->{nvme_smart_health_information_log}
++                            : undef;
++                        next if ref($log) ne 'HASH' || !defined($log->{percentage_used});
++                        $n++;
++                        $alerts++ if ($log->{critical_warning} // 0) || ($log->{media_errors} // 0);
++                        if ($log->{percentage_used} > $worst_used) {
++                            ($worst_used, $worst_dev) = ($log->{percentage_used}, $dev);
++                        }
++                    }
++                    if ($n) {
++                        my $left = 100.0 - $worst_used;
++                        $left = 0 if $left < 0;
++                        $md = {
++                            used => sprintf("%.1f", $left),
++                            total => '100',
++                            dev => $worst_dev,
++                            members => $n,
++                            alerts => $alerts,
++                        };
++                    } else {
++                        $md->{error} = 'no member health logs in ' . $mdfile;
++                    }
++                } else {
++                    $md->{error} = 'cannot parse ' . $mdfile;
++                }
++            } else {
++                $md->{error} = 'cannot open ' . $mdfile;
++            }
++            $res->{md0life} = $md;
++        }
++
++        # --- pve-mods (Zitt): md0 member (Optane) temperature, hottest member wins ---
++        # Members come from /sys/block/md0/slaves (survives nvme renumbering); each member's
++        # controller exposes an hwmon: /sys/block/<dev>/device/hwmon*/temp1_{input,crit} (millidegC).
++        {
++            my $ot = { used => undef, total => 70 };
++            my ($hot, $hotdev, $hotcrit);
++            for my $slave (sort glob('/sys/block/md0/slaves/*')) {
++                my $dev = (split('/', $slave))[-1];
++                my ($input) = glob("/sys/block/$dev/device/hwmon*/temp1_input");
++                next if !defined($input) || !open(my $fh, '<', $input);
++                my $mdeg = <$fh>;
++                close($fh);
++                next if !defined($mdeg) || $mdeg !~ m/^\s*(-?\d+)/;
++                my $temp = $1 / 1000.0;
++                (my $critfile = $input) =~ s/temp1_input$/temp1_crit/;
++                my $crit;
++                if (open(my $cfh, '<', $critfile)) {
++                    my $c = <$cfh>;
++                    close($cfh);
++                    $crit = $1 / 1000.0 if defined($c) && $c =~ m/^\s*(\d+)/ && $1 > 0;
++                }
++                if (!defined($hot) || $temp > $hot) {
++                    ($hot, $hotdev, $hotcrit) = ($temp, $dev, $crit);
++                }
++            }
++            if (defined($hot)) {
++                $ot = { used => $hot, total => $hotcrit // 70, dev => $hotdev };
++            } else {
++                $ot->{error} = 'no md0 member temperatures found';
++            }
++            $res->{opttemp} = $ot;
 +        }
 +
 +        # --- pve-mods (Zitt): lm-sensors + picofan temperatures and fan speeds ---
