@@ -1,0 +1,88 @@
+diff --git a/usr/share/perl5/PVE/API2/Nodes.pm b/../Nodes.pm
+index 9920e977..ed117843 100644
+--- a/usr/share/perl5/PVE/API2/Nodes.pm
++++ b/../Nodes.pm
+@@ -495,6 +495,82 @@ __PACKAGE__->register_method({
+ 	    free => $dinfo->{blocks} - $dinfo->{used},
+ 	};
+ 
++	my %sensors_config = (
++		cputemp => {
++			jsonpath => ['coretemp-isa-0000', 'Package id 0'],
++			valkey => 'temp1_input',
++			critkey => 'temp1_crit',
++		},
++		nvme2temp => {
++			jsonpath => ['nvme-pci-0200', 'Composite'],
++			valkey => 'temp1_input',
++			critkey => 'temp1_crit',
++		},
++		cputemp2 => {
++			jsonpath => ['nct6798-isa-0290', 'CPUTIN'],
++			valkey => 'temp2_input',
++			critkey => 'temp2_max',
++		},
++		systemp => {
++			jsonpath => ['nct6798-isa-0290', 'SYSTIN'],
++			valkey => 'temp1_input',
++			critkey => 'temp1_max',
++		},
++		fan1rpm => {
++			jsonpath => ['nct6798-isa-0290', 'fan1'],
++			valkey => 'fan1_input',
++			critkey => 'fan1_alarm',
++		},
++		fan2rpm => {
++			jsonpath => ['nct6798-isa-0290', 'fan2'],
++			valkey => 'fan2_input',
++			critkey => 'fan2_alarm',
++		},
++		fan4rpm => {
++			jsonpath => ['nct6798-isa-0290', 'fan4'],
++			valkey => 'fan4_input',
++			critkey => 'fan4_alarm',
++		},
++		fan6rpm => {
++			jsonpath => ['nct6798-isa-0290', 'fan6'],
++			valkey => 'fan6_input',
++			critkey => 'fan6_alarm',
++		},
++		fan7rpm => {
++			jsonpath => ['nct6798-isa-0290', 'fan7'],
++			valkey => 'fan7_input',
++			critkey => 'fan7_min',
++		}
++	);
++
++	my $temp_default_val = 0;
++	my $temp_default_crit = 80;
++
++	my $sensors = eval { decode_json(`sensors -j`); };
++	if (defined($sensors)) {
++	 	keys %sensors_config;
++		while (my ($k, $v) = each %sensors_config) {
++			if (!defined($v->{jsonpath})) { next; }
++			my $currref = $sensors;
++			my $pathdefined = 1;
++			for my $pathseg (@{$v->{jsonpath}}) {
++				if (defined($currref->{$pathseg})) {
++					$currref = $currref->{$pathseg}
++				} else {
++					$pathdefined = 0;
++					last;
++				}
++			}
++			if (!$pathdefined) { next; }
++			$res->{$k} = {
++				used => defined($v->{valkey}) && defined($currref->{$v->{valkey}})
++					? $currref->{$v->{valkey}} : $temp_default_val,
++				total => defined($v->{critkey}) && defined($currref->{$v->{critkey}})
++					? $currref->{$v->{critkey}} : $temp_default_crit,
++			};
++		}
++	}
++
+ 	return $res;
+     }});
+ 
+

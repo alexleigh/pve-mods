@@ -1,0 +1,17 @@
+[Unit]
+Description=Exporter for S.M.A.R.T. metrics using smartctl
+Requires=network-online.target
+After=network-online.target
+ConditionVirtualization=false
+Requires=dev-nvme0n1.device
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/smartctl.py 
+User=root
+Group=root
+#Restart=on-failure
+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_RAWIO CAP_MKNOD
+
+[Install]
+WantedBy=multi-user.target

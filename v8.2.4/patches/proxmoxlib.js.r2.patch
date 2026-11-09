@@ -1,0 +1,24 @@
+diff --git a/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js b/../proxmoxlib.js
+index defc3300..949b0b77 100644
+--- a/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
++++ b/../proxmoxlib.js
+@@ -1105,6 +1105,33 @@ utilities: {
+ 		}
+ 		return record.used.toFixed(0) + ' RPM'; 
+ 	},
++	render_node_nvme_life: function(record) {
++		//console.table( record );
++		if (!record || !Ext.isNumeric(record.used) || !Ext.isNumeric(record.total)) {
++			return '-';
++		}
++		let u = parseFloat(record.used); 
++		let t = parseFloat(record.total);
++		
++	    let ratio = (u * 100 / t).toFixed(0);
++
++		return ratio + '% remaining';
++	},
+ 
+     loadTextFromFile: function(file, callback, maxBytes) {
+ 	let maxSize = maxBytes || 8192;
+
