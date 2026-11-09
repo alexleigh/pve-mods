@@ -1,0 +1,108 @@
+diff --git a/usr/share/pve-manager/js/pvemanagerlib.js b/../pvemanagerlib.js
+index 3393cdc2..116e97a7 100644
+--- a/usr/share/pve-manager/js/pvemanagerlib.js
++++ b/../pvemanagerlib.js
+@@ -44998,7 +44998,7 @@ Ext.define('PVE.node.StatusView', {
+     extend: 'Proxmox.panel.StatusView',
+     alias: 'widget.pveNodeStatus',
+ 
+-    height: 350,
++    height: 520,
+     bodyPadding: '15 5 15 5',
+ 
+     layout: {
+@@ -45084,6 +45084,93 @@ Ext.define('PVE.node.StatusView', {
+ 	    colspan: 2,
+ 	    padding: '0 0 20 0',
+ 	},
++	{
++		    itemId: 'cputemp',
++		    iconCls: 'fa fa-fw fa-thermometer-half',
++		    title: gettext('CPU temp'),
++		    valueField: 'cputemp',
++		    maxField: 'cputemp',
++		    renderer: Proxmox.Utils.render_node_temp,
++	},
++	{
++		    itemId: 'nvme2temp',
++		    iconCls: 'fa fa-fw fa-thermometer-half',
++		    title: gettext('NVMe2 temp'),
++		    valueField: 'nvme2temp',
++		    maxField: 'nvme2temp',
++		    renderer: Proxmox.Utils.render_node_temp,
++	},
++	{
++		    itemId: 'cputemp2',
++		    iconCls: 'fa fa-fw fa-thermometer-half',
++		    title: gettext('CPU temp2'),
++		    valueField: 'cputemp2',
++		    maxField: 'cputemp2',
++		    renderer: Proxmox.Utils.render_node_temp,
++	},
++	{
++		    itemId: 'systemp',
++		    iconCls: 'fa fa-fw fa-thermometer-half',
++		    title: gettext('Mobo temp'),
++		    valueField: 'systemp',
++		    maxField: 'systemp',
++		    renderer: Proxmox.Utils.render_node_temp,
++	},
++	{
++		    xtype: 'box',
++		    colspan: 2,
++		    padding: '0 0 20 0',
++	},
++	{
++		    itemId: 'fan1rpm',
++		    iconCls: 'fa fa-fw fa-cog fa-spin',
++		    title: gettext('Fan1'),
++		    valueField: 'fan1rpm',
++		    maxField: '1200',
++			printBar: false,
++		    renderer: Proxmox.Utils.render_node_fan,
++	},
++	{
++		    itemId: 'fan2rpm',
++		    iconCls: 'fa fa-fw fa-cog fa-spin',
++		    title: gettext('Fan2'),
++		    valueField: 'fan2rpm',
++		    maxField: '2400',
++			printBar: false,
++		    renderer: Proxmox.Utils.render_node_fan,
++	},
++	{
++		    itemId: 'fan4rpm',
++		    iconCls: 'fa fa-fw fa-cog fa-spin',
++		    title: gettext('Fan4'),
++		    valueField: 'fan4rpm',
++		    maxField: '2000',
++			printBar: false,
++		    renderer: Proxmox.Utils.render_node_fan,
++	},
++	{
++		    itemId: 'fan6rpm',
++		    iconCls: 'fa fa-fw fa-cog fa-spin',
++		    title: gettext('Fan6'),
++		    valueField: 'fan6rpm',
++		    maxField: 6000,
++			printBar: false,
++		    renderer: Proxmox.Utils.render_node_fan,
++	},
++	{
++		    itemId: 'fan7rpm',
++		    iconCls: 'fa fa-fw fa-cog fa-spin',
++		    title: gettext('Fan7'),
++		    valueField: 'fan7rpm',
++		    maxField: 3000,
++			printBar: false,
++		    renderer: Proxmox.Utils.render_node_fan,
++	},
++	{
++		    xtype: 'box',
++		    colspan: 2,
++		    padding: '0 0 20 0',
++	},
+ 	{
+ 	    itemId: 'cpus',
+ 	    colspan: 2,
+

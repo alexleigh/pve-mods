@@ -1,0 +1,37 @@
+--- ORG/proxmoxlib.js
++++ proxmoxlib.js
+@@ -1193,6 +1193,34 @@
+             return Proxmox.Utils.render_size_usage(record.used, record.total);
+         },
+ 
++        // --- pve-mods (Zitt) ---
++        render_node_temp: function (record) {
++            if (!record || !Ext.isNumeric(record.used) || !Ext.isNumeric(record.total)) {
++                return '-';
++            }
++            let used = parseFloat(record.used);
++            let total = parseFloat(record.total);
++            return used.toFixed(1) + '°C (crit: ' + total.toFixed(1) + '°C)';
++        },
++
++        render_node_fan: function (record) {
++            if (!record || !Ext.isNumeric(record.used)) {
++                return '-';
++            }
++            return parseFloat(record.used).toFixed(0) + ' RPM';
++        },
++
++        render_node_nvme_life: function (record) {
++            if (!record || !Ext.isNumeric(record.used) || !Ext.isNumeric(record.total)) {
++                return '-';
++            }
++            let u = parseFloat(record.used);
++            let t = parseFloat(record.total);
++            let ratio = ((u * 100) / t).toFixed(0);
++            return ratio + '% remaining';
++        },
++        // --- end pve-mods ---
++
+         loadTextFromFile: function (file, callback, maxBytes) {
+             let maxSize = maxBytes || 8192;
+             if (file.size > maxSize) {

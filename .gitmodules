@@ -1,0 +1,3 @@
+[submodule "v8.2.4/source"]
+	path = v8.2.4/source
+	url = https://github.com/proxmox/pve-manager.git

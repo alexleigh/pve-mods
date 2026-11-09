@@ -1,0 +1,231 @@
+--- ORG/pvemanagerlib.js
++++ pvemanagerlib.js
+@@ -52142,7 +52142,7 @@
+     extend: 'Proxmox.panel.StatusView',
+     alias: 'widget.pveNodeStatus',
+ 
+-    height: 350,
++    height: 660, // pve-mods (Zitt): was 350
+     bodyPadding: '15 5 15 5',
+ 
+     layout: {
+@@ -52224,6 +52224,219 @@
+             maxField: 'swap',
+             renderer: Proxmox.Utils.render_node_size_usage,
+         },
++        // --- pve-mods (Zitt) ---
++        {
++            iconCls: 'fa fa-fw fa-hdd-o',
++            itemId: 'nvme0n1',
++            title: '/ ' + gettext('HD Life'),
++            valueField: 'nvme0n1',
++            maxField: 'nvme0n1',
++            printBar: true,
++            renderer: Proxmox.Utils.render_node_nvme_life,
++            // bar shows life REMAINING (e.g. 95%) with inverted colours: the stock logic colours a
++            // HIGH ratio as warning/critical, which is backwards for remaining life. Disable it
++            // (thresholds > 1) and colour LOW remaining instead: < 25% warning, < 10% critical.
++            warningThreshold: 2,
++            criticalThreshold: 2,
++            lifeWarning: 0.25,
++            lifeCritical: 0.1,
++            updateValue: function (text, usage) {
++                Proxmox.widget.Info.prototype.updateValue.call(this, text, usage);
++                let bar = this.getComponent('progress');
++                // text is undefined on the initial (pre-data) call from initComponent; skip it
++                if (!bar || !this.printBar || text === undefined || !Ext.isNumeric(usage) || usage < 0) {
++                    return;
++                }
++                bar.removeCls('warning');
++                bar.removeCls('critical');
++                if (usage < this.lifeCritical) {
++                    bar.addCls('critical');
++                } else if (usage < this.lifeWarning) {
++                    bar.addCls('warning');
++                }
++            },
++        },
++        {
++            // md0 = RAID6 of 4x Optane M10; shows the WORST member's remaining life
++            iconCls: 'fa fa-fw fa-hdd-o',
++            itemId: 'md0life',
++            title: gettext('Opt Life'),
++            valueField: 'md0life',
++            maxField: 'md0life',
++            printBar: true,
++            renderer: (rec) => {
++                let text = Proxmox.Utils.render_node_nvme_life(rec);
++                if (text === '-') {
++                    return text;
++                }
++                if (rec.dev) {
++                    text += ' (worst: ' + String(rec.dev).replace(/^\/dev\//, '') + ')';
++                }
++                if (rec.alerts) {
++                    text += ' - CHECK SMART';
++                }
++                return text;
++            },
++            // same inverted colouring as HD Life
++            warningThreshold: 2,
++            criticalThreshold: 2,
++            lifeWarning: 0.25,
++            lifeCritical: 0.1,
++            updateValue: function (text, usage) {
++                Proxmox.widget.Info.prototype.updateValue.call(this, text, usage);
++                let bar = this.getComponent('progress');
++                if (!bar || !this.printBar || text === undefined) {
++                    return;
++                }
++                bar.removeCls('warning');
++                bar.removeCls('critical');
++                // '-' = no data (Nodes.pm sends used=null): stock calc yields 0, don't paint it red
++                if (text === '-' || !Ext.isNumeric(usage) || usage < 0) {
++                    return;
++                }
++                if (usage < this.lifeCritical) {
++                    bar.addCls('critical');
++                } else if (usage < this.lifeWarning) {
++                    bar.addCls('warning');
++                }
++            },
++        },
++        {
++            itemId: 'nvme2temp',
++            iconCls: 'fa fa-fw fa-thermometer-half',
++            title: gettext('NVMe2 temp'),
++            valueField: 'nvme2temp',
++            maxField: 'nvme2temp',
++            renderer: Proxmox.Utils.render_node_temp,
++        },
++        {
++            // hottest of the md0 RAID members (4x Optane M10)
++            itemId: 'opttemp',
++            iconCls: 'fa fa-fw fa-thermometer-half',
++            title: gettext('Opt temp'),
++            valueField: 'opttemp',
++            maxField: 'opttemp',
++            renderer: (rec) => {
++                let text = Proxmox.Utils.render_node_temp(rec);
++                if (text !== '-' && rec.dev) {
++                    text += ' (' + rec.dev + ')';
++                }
++                return text;
++            },
++        },
++        {
++            xtype: 'box',
++            colspan: 2,
++            padding: '0 0 20 0',
++        },
++        {
++            itemId: 'cputemp',
++            iconCls: 'fa fa-fw fa-thermometer-half',
++            title: gettext('CPU temp'),
++            valueField: 'cputemp',
++            maxField: 'cputemp',
++            renderer: Proxmox.Utils.render_node_temp,
++        },
++        {
++            itemId: 'cputemp2',
++            iconCls: 'fa fa-fw fa-thermometer-half',
++            title: gettext('CPU temp2'),
++            valueField: 'cputemp2',
++            maxField: 'cputemp2',
++            renderer: Proxmox.Utils.render_node_temp,
++        },
++        {
++            itemId: 'systemp',
++            iconCls: 'fa fa-fw fa-thermometer-half',
++            title: gettext('Mobo temp'),
++            valueField: 'systemp',
++            maxField: 'systemp',
++            renderer: Proxmox.Utils.render_node_temp,
++        },
++        {
++            itemId: 'pico',
++            iconCls: 'fa fa-fw fa-thermometer-half',
++            title: gettext('picoFan die'),
++            valueField: 'picoTemp',
++            maxField: 'picoTemp',
++            renderer: Proxmox.Utils.render_node_temp,
++        },
++        {
++            itemId: 'inlet',
++            iconCls: 'fa fa-fw fa-thermometer-half',
++            title: gettext('temp In'),
++            valueField: 'inletTemp',
++            maxField: 'inletTemp',
++            renderer: Proxmox.Utils.render_node_temp,
++        },
++        {
++            itemId: 'outlet',
++            iconCls: 'fa fa-fw fa-thermometer-half',
++            title: gettext('temp Out (near CPU exhaust)'),
++            valueField: 'outletTemp',
++            maxField: 'outletTemp',
++            renderer: Proxmox.Utils.render_node_temp,
++        },
++        {
++            xtype: 'box',
++            colspan: 2,
++            padding: '0 0 20 0',
++        },
++        {
++            itemId: 'fan1rpm',
++            iconCls: 'fa fa-fw fa-cog fa-spin',
++            title: gettext('Fan1'),
++            valueField: 'fan1rpm',
++            maxField: 'fan1rpm',
++            printBar: true,
++            renderer: Proxmox.Utils.render_node_fan,
++        },
++        {
++            itemId: 'fan2rpm',
++            iconCls: 'fa fa-fw fa-cog fa-spin',
++            title: gettext('Fan2'),
++            valueField: 'fan2rpm',
++            maxField: 'fan2rpm',
++            printBar: true,
++            renderer: Proxmox.Utils.render_node_fan,
++        },
++        {
++            itemId: 'fan3rpm',
++            iconCls: 'fa fa-fw fa-cog fa-spin',
++            title: gettext('Fan3'),
++            valueField: 'fan3rpm',
++            maxField: 'fan3rpm',
++            printBar: true,
++            renderer: Proxmox.Utils.render_node_fan,
++        },
++        {
++            itemId: 'fan4rpm',
++            iconCls: 'fa fa-fw fa-cog fa-spin',
++            title: gettext('Fan4'),
++            valueField: 'fan4rpm',
++            maxField: 'fan4rpm',
++            printBar: true,
++            renderer: Proxmox.Utils.render_node_fan,
++        },
++        {
++            itemId: 'fan6rpm',
++            iconCls: 'fa fa-fw fa-cog fa-spin',
++            title: gettext('Fan6'),
++            valueField: 'fan6rpm',
++            maxField: 'fan6rpm',
++            printBar: true,
++            renderer: Proxmox.Utils.render_node_fan,
++        },
++        {
++            itemId: 'fan7rpm',
++            iconCls: 'fa fa-fw fa-cog fa-spin',
++            title: gettext('Fan7'),
++            valueField: 'fan7rpm',
++            maxField: 'fan7rpm',
++            printBar: true,
++            renderer: Proxmox.Utils.render_node_fan,
++        },
++        // --- end pve-mods ---
+         {
+             xtype: 'box',
+             colspan: 2,

@@ -1,0 +1,181 @@
+diff --git a/usr/share/perl5/PVE/API2/Nodes.pm b/../Nodes.pm
+index ed117843..57acbcad 100644
+--- a/usr/share/perl5/PVE/API2/Nodes.pm
++++ b/../Nodes.pm
+@@ -495,6 +495,51 @@ __PACKAGE__->register_method({
+ 	    free => $dinfo->{blocks} - $dinfo->{used},
+ 	};
+ 
++	$res->{'nvme0n1'} = { used => '25', total=>'98', error => 'no proc/mounts' };
++
++	open my $mnt, "/proc/mounts";
++	while ( my $line = <$mnt> ) {
++		if ($line =~ m/^(.+nvme\d.\d)p\d+\s+(.boot\S+)/i ) {
++			my $nvme = $1;
++
++			my @p = split('/', $nvme);
++			my $bnvme = $p[-1];
++
++			my $content = "";
++			my $fname = '/tmp/smartctl.'.$bnvme.'.json';
++			open(my $fh, '<', $fname ) or $res->{$bnvme} = { used => '26', total=>'99', error => 'cannot open file: ' . $fname  };
++			{
++				local $/;
++				$content = <$fh>;
++			}
++			close($fh);
++			my $sensors = eval { decode_json($content) };
++
++			if ( !defined($sensors) ) {
++				$res->{$bnvme} = { used => '50', total=>'101', error => 'no sensors' };
++			}
++
++			if ( exists $sensors->{nvme_smart_health_information_log} ) {
++				if ( exists $sensors->{nvme_smart_health_information_log}{percentage_used} ) { 
++					my $left = 100.0 - $sensors->{nvme_smart_health_information_log}{percentage_used};
++										
++					$res->{$bnvme} = {
++						used => sprintf("%.1f", $left),
++						total => '100',
++						mntpt => $2,
++						dev => $nvme
++					};
++					last;
++				}
++			} else {
++				$res->{$bnvme} = { used => '75.0', total=>'102.2', error => 'no nvme_smart_health_information_log',
++								   sensors => $sensors, username => scalar getpwuid($<) };
++			}
++		}
++	}
++	close($mnt);
++
+ 	my %sensors_config = (
+ 		cputemp => {
+ 			jsonpath => ['coretemp-isa-0000', 'Package id 0'],
+@@ -526,6 +571,12 @@ __PACKAGE__->register_method({
+ 			valkey => 'fan2_input',
+ 			critkey => 'fan2_alarm',
+ 		},
++		fan3rpm => {
++			jsonpath => ['fans', 8],
++			valkey => 'rpm',
++      		pwmkey => 'pwm',
++      		picofan => 1,
++		},
+ 		fan4rpm => {
+ 			jsonpath => ['nct6798-isa-0290', 'fan4'],
+ 			valkey => 'fan4_input',
+@@ -540,34 +591,105 @@ __PACKAGE__->register_method({
+ 			jsonpath => ['nct6798-isa-0290', 'fan7'],
+ 			valkey => 'fan7_input',
+ 			critkey => 'fan7_min',
+-		}
++		},
++    	inletTemp => {
++			jsonpath => ['sensors', 1],
++			valkey => 'temp',
++      		picofan => 1,
++    	},
++    	outletTemp => {
++			jsonpath => ['sensors', 2],
++			valkey => 'temp',
++      		picofan => 1,
++    	},
++    	picoTemp => {
++			jsonpath => ['sensors', 3],
++			valkey => 'temp',
++      		picofan => 1,
++    	}
+ 	);
+ 
+ 	my $temp_default_val = 0;
+ 	my $temp_default_crit = 80;
+ 
+ 	my $sensors = eval { decode_json(`sensors -j`); };
++	my $sensors2 = eval { decode_json(`/usr/bin/python3 /opt/picofan.py`); };
++	if ( exists $sensors2->{fans} ) {
++	  $sensors->{fans} = $sensors2->{fans};
++	}
++	if ( exists $sensors2->{sensors} ) {
++	  $sensors->{sensors} = $sensors2->{sensors};
++	}
++	undef $sensors2;
++
+ 	if (defined($sensors)) {
+ 	 	keys %sensors_config;
+ 		while (my ($k, $v) = each %sensors_config) {
+ 			if (!defined($v->{jsonpath})) { next; }
+ 			my $currref = $sensors;
+ 			my $pathdefined = 1;
+-			for my $pathseg (@{$v->{jsonpath}}) {
+-				if (defined($currref->{$pathseg})) {
+-					$currref = $currref->{$pathseg}
+-				} else {
+-					$pathdefined = 0;
++			if ( exists $v->{picofan} ) {
++			  my $entry = $v->{jsonpath}[0];
++              my $id = $v->{jsonpath}[1];
++
++			  if ( exists $sensors->{$entry} ) {
++				foreach my $a ( @{ $sensors->{$entry} } ) {
++				  if ( $a->{id} == $id ) {
++					$res->{$k} = { 
++                  		used => $a->{$v->{valkey}},
++                  		total => $temp_default_crit
++                  	};
++
++					if ( exists $v->{pwmkey} ) {
++					  my $pwm = $a->{ $v->{pwmkey} };
++					  my $rpm = $res->{$k}->{used};
++					  if ($pwm > 1) {
++						my $max = $rpm/$pwm * 100;
++						$res->{$k}->{total} = ($max == int $max) ? $max : int($max + 1);
++					  }
++					}
+ 					last;
++				  }
++			    }
++			  }
++			  $pathdefined = 0;
++			} else {
++				for my $pathseg (@{$v->{jsonpath}}) {
++					if ( defined $v->{jsonpath}[1]  && 
++					     $v->{jsonpath}[1] =~ m/fan(\d+)/i &&
++					     !defined $res->{$k}->{pwm} ) {
++						my $hwmon = "/sys/devices/platform/nct6775.656/hwmon/hwmon4/pwm".$1;
++						my $pwm;
++						if (-r $hwmon) {
++							open(my $fh, '<', $hwmon );
++							{ local $/; $pwm = <$fh>; }
++							close($fh); 
++							$res->{$k}->{pwm} = $pwm;
++						}
++					}
++					if (defined($currref->{$pathseg})) {
++						$currref = $currref->{$pathseg}
++					} else {
++						$pathdefined = 0;
++						last;
++					}
+ 				}
+ 			}
+ 			if (!$pathdefined) { next; }
++			my $pwm = -1;
++			if ( defined( $res->{$k}->{pwm} ) ) { $pwm = $res->{$k}->{pwm}; chomp($pwm); }
+ 			$res->{$k} = {
+ 				used => defined($v->{valkey}) && defined($currref->{$v->{valkey}})
+ 					? $currref->{$v->{valkey}} : $temp_default_val,
+ 				total => defined($v->{critkey}) && defined($currref->{$v->{critkey}})
+ 					? $currref->{$v->{critkey}} : $temp_default_crit,
+ 			};
++			if ($pwm > 0) { 
++				my $rpm = $res->{$k}->{used};
++				my $max = $rpm/$pwm * 255;
++				$res->{$k}->{total} = ($max == int $max) ? $max : int($max + 1);
++				$res->{$k}->{pwm} = $pwm;
++			}
+ 		}
+ 	}
+
+

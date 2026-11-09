@@ -1,0 +1,24 @@
+﻿diff --git a/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js b/../proxmoxlib.js
+index e224af90..defc3300 100644
+--- a/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
++++ b/../proxmoxlib.js
+@@ -1093,6 +1093,18 @@ utilities: {
+     render_node_size_usage: function(record) {
+ 	return Proxmox.Utils.render_size_usage(record.used, record.total);
+     },
++	render_node_temp: function(record) {
++				if (!record || !Ext.isNumeric(record.used) || !Ext.isNumeric(record.total)) {
++					return '-';
++				}
++				return record.used.toFixed(1) + '°C (crit: ' + record.total.toFixed(1) + '°C)';
++	},
++	render_node_fan: function(record) {
++		if (!record || !Ext.isNumeric(record.used)) {
++			return '-';
++		}
++		return record.used.toFixed(0) + ' RPM'; 
++	},
+ 
+     loadTextFromFile: function(file, callback, maxBytes) {
+ 	let maxSize = maxBytes || 8192;
+

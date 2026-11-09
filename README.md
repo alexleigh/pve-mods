@@ -88,6 +88,14 @@ patch directories and the versions of the Proxmox packages they were generated a
 * pve-manager 8.0.4
 * proxmox-widget-toolkit 4.0.6
 
+[v8.2.4](v8.2.4/patches) (Zitt fork: ASUS Pro WS X299 SAGE II, picofan, NVMe life)
+* pve-manager 8.2.4
+* proxmox-widget-toolkit 4.2.1
+
+[v9.2.26](v9.2.26) (Zitt fork; see its [README](v9.2.26/README.md) for scripted install/rollback)
+* pve-manager 9.2.26
+* proxmox-widget-toolkit 5.2.12
+
 > **Warning**  
 > If the package versions installed on your system are different from these, the patches should not
 > be applied. Instead, use the patches as a reference to make manual modifications to the affected
